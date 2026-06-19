@@ -1,0 +1,332 @@
+---
+name: plugin-tui
+description: Use ONLY when developing opencode TUI plugins. Covers slot registration, JSX components, SolidJS signals, theme colors, event handling, and known troubleshooting. Use when editing src/tui.tsx or adding TUI plugin functionality.
+---
+
+# TUI Plugin Development
+
+For the complete opencode plugin architecture reference, see `docs/instructions/opencode-plugin-architecture.md`.
+
+## File Requirements
+
+- **Must** be named `.tsx` (not `.js` or `.jsx`)
+- **Must** start with `/** @jsxImportSource @opentui/solid */`
+- **tsconfig.json** must have `"jsx": "preserve"`
+- Do **not** import types from `@opencode-ai/plugin/tui` — causes silent load failures
+
+## Plugin Structure
+
+```ts
+/** @jsxImportSource @opentui/solid */
+
+import { TextAttributes } from "@opentui/core";
+import { Show, createSignal } from "solid-js";
+
+const plugin = {
+  id: "my-plugin-tui",
+  tui: async (api: any, _options: any) => {
+    // signals, events, slot registration
+  },
+};
+
+export default plugin;
+```
+
+## Slot Registration
+
+```ts
+api.slots.register({
+  order: 300,  // lower = rendered first
+  slots: {
+    sidebar_content: MyComponent,
+  },
+});
+```
+
+### Available Slots
+
+| Slot | Visibility |
+|------|------------|
+| `sidebar_content` | Inside active sessions only |
+| `home_bottom` | Home screen |
+| `home_footer` | Home screen |
+| `session_prompt` | Below chat input |
+| `app_bottom` | Always visible |
+
+## JSX Components
+
+### Layout
+
+```tsx
+<box padding={1} gap={1} flexDirection="row" justifyContent="center">
+  <text fg={color}>Content</text>
+</box>
+
+<scrollbox width="100%" flexGrow={1} minHeight={6} maxHeight={28}>
+  {/* scrollable content */}
+</scrollbox>
+```
+
+### Text
+
+```tsx
+<text fg={theme().text}>Normal text</text>
+<text fg={theme().textMuted}>Muted text</text>
+<text fg={theme().error}>Error text</text>
+<text fg={theme().warning}>Warning text</text>
+<text attributes={TextAttributes.BOLD}>Bold text</text>
+<text wrapMode="word" width="100%">Wrapped text</text>
+```
+
+### Conditional Rendering
+
+```tsx
+<Show when={condition()}>
+  <text>Shown when true</text>
+</Show>
+
+{condition() && <text>Alternative</text>}
+{array.map(item => <text>{item}</text>)}
+```
+
+### Progress Bar (Character-Based)
+
+```tsx
+function ProgressBar(props: { pct: number; width?: number; color: string }) {
+  const w = props.width ?? 20;
+  const filled = Math.max(0, Math.min(w, Math.round((props.pct / 100) * w)));
+  const empty = w - filled;
+  const bar = "█".repeat(filled) + "░".repeat(empty);
+  return <text fg={props.color}>{bar} {props.pct}%</text>;
+}
+```
+
+### Slider Component
+
+```tsx
+<Slider
+  orientation="horizontal"
+  value={pct}
+  min={0}
+  max={100}
+  foregroundColor={color}
+  backgroundColor={theme().textMuted}
+/>
+```
+
+## State Management
+
+```ts
+import { createSignal } from "solid-js";
+
+const [value, setValue] = createSignal(0);
+
+// Read: value()
+// Write: setValue(newValue)
+```
+
+Signals trigger automatic re-renders when changed.
+
+## Event System
+
+```ts
+const unsubEvent = api.event.on("session.idle", () => {
+  // refresh data
+});
+
+// Cleanup:
+api.lifecycle.onDispose(() => {
+  unsubEvent();
+});
+```
+
+### Available Events
+
+| Event | Properties |
+|-------|------------|
+| `session.idle` | `sessionID` |
+| `session.updated` | `info.id`, `info.modelID`, `info.providerID` |
+| `session.compacted` | `sessionID` |
+| `session.created` | `info` (Session object) |
+| `session.deleted` | `sessionID` |
+| `message.updated` | `info.sessionID`, `info.id`, `info.role`, `info.tokens`, `info.cost` |
+| `message.removed` | `sessionID`, `messageID` |
+| `message.part.updated` | `info.sessionID`, `info.id` |
+| `message.part.removed` | — |
+| `tui.session.select` | `sessionID` |
+| `tui.prompt.append` | — |
+| `tui.command.execute` | — |
+| `tui.toast.show` | — |
+
+## Lifecycle & Cleanup
+
+```ts
+api.lifecycle.onDispose(() => {
+  clearInterval(interval);
+  unsubEvent();
+});
+```
+
+## Theme Colors
+
+Access via slot context or directly from api:
+
+```ts
+// In slot component
+const theme = () => ctx.theme.current
+
+// Directly from api
+api.theme.current.text
+api.theme.current.textMuted
+api.theme.current.error
+api.theme.current.warning
+
+theme().text        // Primary text color
+theme().textMuted   // Secondary/muted text color
+theme().error       // Error/red color
+theme().warning     // Warning/yellow color
+```
+
+## File Access
+
+`api.client.file.read()` is **sandboxed** to the workspace directory. Use Node `fs` directly:
+
+```ts
+import { readFileSync, existsSync } from "fs";
+
+if (existsSync(path)) {
+  const content = readFileSync(path, "utf-8");
+  const data = JSON.parse(content);
+}
+```
+
+## Debug Logging
+
+```ts
+process.stderr.write("[my-plugin-tui] message\n");
+```
+
+Filter logs:
+```bash
+opencode --log-level DEBUG --print-logs 2>&1 | grep "my-plugin-tui"
+```
+
+## Slot Component Signature
+
+```ts
+function MyComponent(ctx: any, props: { session_id?: string }) {
+  // session_id is optional — non-session slots don't provide it
+  const theme = () => ctx.theme.current;
+  return <box padding={1}><text fg={theme().text}>Hello</text></box>;
+}
+```
+
+## Keymap / Slash Commands (Experimental)
+
+```ts
+const keymap = (api as any).keymap;
+if (!keymap?.registerLayer) return;
+
+const dispose = keymap.registerLayer({
+  commands: [{
+    namespace: "palette",
+    name: "my-plugin.command",
+    title: "My Command",
+    desc: "Description",
+    category: "My Plugin",
+    slashName: "my_command",
+    run(input?: unknown) {
+      // execute command
+    },
+  }],
+});
+
+if (typeof dispose === "function") {
+  api.lifecycle.onDispose(dispose);
+}
+```
+
+**Warning:** `api.keymap.registerLayer` may break plugin loading in some versions. Test carefully.
+
+## Toast Notifications
+
+```ts
+api.ui.toast?.({
+  message: "Toast message",
+  variant: "info" | "success" | "warning" | "error",
+});
+```
+
+**Warning:** `api.ui.toast` is untested — may or may not exist.
+
+### Markdown
+
+```tsx
+<Markdown content={markdownString} />
+```
+
+### Session Prompt Component
+
+The `session_prompt` slot can access the built-in prompt component:
+
+```tsx
+function SessionPromptWithStatus(props: { sessionID: string }) {
+  const Prompt = api.ui?.Prompt
+  if (!Prompt) {
+    return <text>Fallback UI</text>
+  }
+  return (
+    <box gap={0}>
+      <Prompt sessionID={props.sessionID} />
+      <text fg={api.theme.current.textMuted}>Status text</text>
+    </box>
+  )
+}
+```
+
+## Dialog Pattern
+
+```tsx
+function CommandOutputDialog(props: { api: any; title: string; output: string }) {
+  const lines = () => props.output.split("\n");
+  const bodyHeight = () => Math.min(28, Math.max(6, lines().length));
+  return (
+    <box gap={1} width="100%" flexGrow={1} paddingLeft={2} paddingRight={2} paddingBottom={1}>
+      <text fg={props.api.theme.current.text}><b>{props.title}</b></text>
+      <scrollbox width="100%" flexGrow={1} minHeight={bodyHeight()} maxHeight={28}>
+        <box gap={0} width="100%" minWidth={0}>
+          {lines().map((line) => (
+            <text fg={props.api.theme.current.text} wrapMode="word" width="100%">
+              {line || " "}
+            </text>
+          ))}
+        </box>
+      </scrollbox>
+      <text fg={props.api.theme.current.textMuted}>esc closes</text>
+    </box>
+  );
+}
+```
+
+## Troubleshooting
+
+### Plugin doesn't load
+
+1. File must be `.tsx` extension
+2. Must have `/** @jsxImportSource @opentui/solid */` pragma
+3. Don't import from `@opencode-ai/plugin/tui`
+4. Check `tsconfig.json` has `"jsx": "preserve"`
+
+### JSX not rendering
+
+1. `jsx: "preserve"` required in tsconfig
+2. Build script must copy `.tsx` to `dist/` (not compile to `.jsx`)
+3. Use `@opentui/solid` components (`<box>`, `<text>`, etc.)
+
+### File read fails with sandbox error
+
+Use `fs.readFileSync` instead of `api.client.file.read()`.
+
+### `api.keymap.registerLayer` breaks loading
+
+The API may not exist in your opencode version. Guard with `if (!keymap?.registerLayer) return`.
