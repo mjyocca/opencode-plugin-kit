@@ -8,9 +8,9 @@
  */
 
 import type { Plugin } from "@opencode-ai/plugin"
-import type { Event } from "@opencode-ai/sdk"
 import { tool } from "@opencode-ai/plugin"
 import { createLogger } from "./lib/logger.js"
+import { EVENT } from "./lib/events.js"
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -160,184 +160,184 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
       switch (event.type) {
         // ── Session Events ───────────────────────────────────────────────
 
-        case "session.created": {
+        case EVENT.SessionCreated: {
           log.debug(`session.created — id: ${event.properties.info.id}`)
           break
         }
 
-        case "session.updated": {
+        case EVENT.SessionUpdated: {
           log.debug(`session.updated — id: ${event.properties.info.id}`)
           break
         }
 
-        case "session.idle": {
+        case EVENT.SessionIdle: {
           log.debug(`session.idle — sessionID: ${event.properties.sessionID}`)
           break
         }
 
-        case "session.deleted": {
+        case EVENT.SessionDeleted: {
           log.debug(`session.deleted — id: ${event.properties.info.id}`)
           break
         }
 
-        case "session.compacted": {
+        case EVENT.SessionCompacted: {
           log.debug(`session.compacted — sessionID: ${event.properties.sessionID}`)
           break
         }
 
-        case "session.error": {
+        case EVENT.SessionError: {
           log.debug(`session.error — sessionID: ${event.properties.sessionID ?? "(none)"}`)
           break
         }
 
-        case "session.status": {
+        case EVENT.SessionStatus: {
           log.debug(`session.status — sessionID: ${event.properties.sessionID}, status: ${event.properties.status.type}`)
           break
         }
 
-        case "session.diff": {
+        case EVENT.SessionDiff: {
           log.debug(`session.diff — sessionID: ${event.properties.sessionID}, files: ${event.properties.diff.length}`)
           break
         }
 
         // ── Message Events ───────────────────────────────────────────────
 
-        case "message.updated": {
+        case EVENT.MessageUpdated: {
           log.debug(`message.updated — session: ${event.properties.info.sessionID}, id: ${event.properties.info.id}`)
           break
         }
 
-        case "message.removed": {
+        case EVENT.MessageRemoved: {
           log.debug(`message.removed — session: ${event.properties.sessionID}, message: ${event.properties.messageID}`)
           break
         }
 
-        case "message.part.updated": {
+        case EVENT.MessagePartUpdated: {
           log.debug(`message.part.updated — session: ${event.properties.part.sessionID}, part: ${event.properties.part.type}`)
           break
         }
 
-        case "message.part.removed": {
+        case EVENT.MessagePartRemoved: {
           log.debug(`message.part.removed — session: ${event.properties.sessionID}, part: ${event.properties.partID}`)
           break
         }
 
         // ── Todo Events ──────────────────────────────────────────────────
 
-        case "todo.updated": {
+        case EVENT.TodoUpdated: {
           log.debug(`todo.updated — sessionID: ${event.properties.sessionID}`)
           break
         }
 
         // ── File Events ──────────────────────────────────────────────────
 
-        case "file.edited": {
+        case EVENT.FileEdited: {
           log.debug(`file.edited — file: ${event.properties.file}`)
           break
         }
 
-        case "file.watcher.updated": {
+        case EVENT.FileWatcherUpdated: {
           log.debug(`file.watcher.updated — file: ${event.properties.file}, event: ${event.properties.event}`)
           break
         }
 
         // ── LSP Events ───────────────────────────────────────────────────
 
-        case "lsp.updated": {
+        case EVENT.LspUpdated: {
           log.debug(`lsp.updated`)
           break
         }
 
-        case "lsp.client.diagnostics": {
+        case EVENT.LspClientDiagnostics: {
           log.debug(`lsp.client.diagnostics — server: ${event.properties.serverID}`)
           break
         }
 
         // ── Command Events ───────────────────────────────────────────────
 
-        case "command.executed": {
+        case EVENT.CommandExecuted: {
           log.debug(`command.executed — name: ${event.properties.name}`)
           break
         }
 
         // ── Installation Events ──────────────────────────────────────────
 
-        case "installation.updated": {
+        case EVENT.InstallationUpdated: {
           log.debug(`installation.updated — version: ${event.properties.version}`)
           break
         }
 
-        case "installation.update-available": {
+        case EVENT.InstallationUpdateAvailable: {
           log.debug(`installation.update-available — version: ${event.properties.version}`)
           break
         }
 
         // ── Server Events ────────────────────────────────────────────────
 
-        case "server.connected": {
+        case EVENT.ServerConnected: {
           log.debug(`server.connected`)
           break
         }
 
-        case "server.instance.disposed": {
+        case EVENT.ServerInstanceDisposed: {
           log.debug(`server.instance.disposed — directory: ${event.properties.directory}`)
           break
         }
 
         // ── TUI Events ───────────────────────────────────────────────────
 
-        case "tui.prompt.append": {
+        case EVENT.TuiPromptAppend: {
           log.debug(`tui.prompt.append — text: ${event.properties.text}`)
           break
         }
 
-        case "tui.command.execute": {
+        case EVENT.TuiCommandExecute: {
           log.debug(`tui.command.execute — command: ${event.properties.command}`)
           break
         }
 
-        case "tui.toast.show": {
+        case EVENT.TuiToastShow: {
           log.debug(`tui.toast.show — message: ${event.properties.message}`)
           break
         }
 
         // ── Permission Events ────────────────────────────────────────────
 
-        case "permission.updated": {
+        case EVENT.PermissionUpdated: {
           log.debug(`permission.updated — type: ${event.properties.type}`)
           break
         }
 
-        case "permission.replied": {
+        case EVENT.PermissionReplied: {
           log.debug(`permission.replied — session: ${event.properties.sessionID}, response: ${event.properties.response}`)
           break
         }
 
         // ── VCS Events ───────────────────────────────────────────────────
 
-        case "vcs.branch.updated": {
+        case EVENT.VcsBranchUpdated: {
           log.debug(`vcs.branch.updated — branch: ${event.properties.branch ?? "(none)"}`)
           break
         }
 
         // ── PTY Events ───────────────────────────────────────────────────
 
-        case "pty.created": {
+        case EVENT.PtyCreated: {
           log.debug(`pty.created — id: ${event.properties.info.id}, command: ${event.properties.info.command}`)
           break
         }
 
-        case "pty.updated": {
+        case EVENT.PtyUpdated: {
           log.debug(`pty.updated — id: ${event.properties.info.id}`)
           break
         }
 
-        case "pty.exited": {
+        case EVENT.PtyExited: {
           log.debug(`pty.exited — id: ${event.properties.id}, exitCode: ${event.properties.exitCode}`)
           break
         }
 
-        case "pty.deleted": {
+        case EVENT.PtyDeleted: {
           log.debug(`pty.deleted — id: ${event.properties.id}`)
           break
         }
