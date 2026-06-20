@@ -1,37 +1,42 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import type { Event } from "@opencode-ai/sdk";
 import { tool } from "@opencode-ai/plugin";
-import { createLogger } from "./lib/logger.js";
-import { EVENT } from "./lib/events.js";
+import { createSdkLogger } from "./lib/logger.js";
 import { PLUGIN_ID } from "./lib/constants.js";
 
-const log = createLogger(PLUGIN_ID, "DEBUG_PLUGIN_TUI");
+export const PluginTuiServer: Plugin = async ({
+  client,
+  project,
+  directory,
+}) => {
+  const logger = createSdkLogger(client, PLUGIN_ID, "DEBUG_PLUGIN_TUI");
 
-const handleEvent = async ({ event }: { event: Event }): Promise<void> => {
-  log.debug(`[EVENT] ${event.type}`);
+  await logger.info(
+    `Active — project: ${project ?? "(none)"}, dir: ${directory}`,
+  );
 
-  switch (event.type) {
-    case EVENT.SessionCreated:
-      log.debug(`session.created — id: ${event.properties.info.id}`);
-      break;
+  const handleEvent = async ({ event }: { event: Event }): Promise<void> => {
+    await logger.debug(`[EVENT] ${event.type}`);
 
-    case EVENT.MessageUpdated:
-      log.debug(
-        `message.updated — session: ${event.properties.info.sessionID}`,
-      );
-      break;
+    switch (event.type) {
+      case "session.created":
+        await logger.debug(`session.created — id: ${event.properties.info.id}`);
+        break;
 
-    case EVENT.FileEdited:
-      log.debug(`file.edited — file: ${event.properties.file}`);
-      break;
+      case "message.updated":
+        await logger.debug(
+          `message.updated — session: ${event.properties.info.sessionID}`,
+        );
+        break;
 
-    default:
-      log.debug(`event: ${event.type}`);
-  }
-};
+      case "file.edited":
+        await logger.debug(`file.edited — file: ${event.properties.file}`);
+        break;
 
-export const PluginTuiServer: Plugin = async ({ project, directory }) => {
-  log.info(`Active — project: ${project ?? "(none)"}, dir: ${directory}`);
+      default:
+        await logger.debug(`event: ${event.type}`);
+    }
+  };
 
   const helloTool = tool({
     description: "Demo tool — shows that the plugin is loaded and working.",
@@ -46,7 +51,7 @@ export const PluginTuiServer: Plugin = async ({ project, directory }) => {
 
   return {
     dispose: async () => {
-      log.info("Disposing");
+      await logger.info("Disposing");
     },
 
     tool: {

@@ -9,6 +9,26 @@ const SIDEBAR_ORDER = 300;
 const COMPACT_ORDER = 90;
 const REFRESH_INTERVAL_MS = 5000;
 
+/**
+ * Logs to SDK if available, falls back to stderr.
+ * TUI plugins may not have reliable client access, so we use optional chaining.
+ */
+function log(api: TuiPluginApi, level: "info" | "warn" | "error" | "debug", msg: string) {
+  const client = (api as any).client;
+  if (client?.app?.log) {
+    // SDK logging available (async, but we don't await in TUI context)
+    void client.app.log({
+      level,
+      message: `[${PLUGIN_ID}] ${msg}`,
+      extra: {},
+    });
+  } else {
+    // Fallback to stderr for TUI
+    const prefix = level === "debug" ? "DEBUG: " : level === "warn" ? "WARN: " : level === "error" ? "ERROR: " : "";
+    process.stderr.write(`[${PLUGIN_ID}] ${prefix}${msg}\n`);
+  }
+}
+
 function todayMonth(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -81,6 +101,8 @@ function SessionPromptWithStatus(props: {
 }
 
 const tui: TuiPlugin = async (api, _options) => {
+  log(api, "info", "TUI plugin initializing");
+
   const [statusText, setStatusText] = createSignal("Initializing...");
   const [compactText, setCompactText] = createSignal("");
 
@@ -95,6 +117,8 @@ const tui: TuiPlugin = async (api, _options) => {
   const unsubEvent = api.event.on("session.idle", () => {
     refreshStatus();
   });
+
+  log(api, "info", "TUI plugin initialized — slots registered");
 
   api.slots.register({
     order: SIDEBAR_ORDER,
@@ -121,6 +145,7 @@ const tui: TuiPlugin = async (api, _options) => {
   });
 
   api.lifecycle.onDispose(() => {
+    log(api, "info", "TUI plugin disposing");
     clearInterval(interval);
     unsubEvent();
   });
