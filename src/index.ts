@@ -1,13 +1,13 @@
-import type { Plugin, Hooks } from "@opencode-ai/plugin";
+import type { Plugin } from "@opencode-ai/plugin";
+import type { Event } from "@opencode-ai/sdk";
 import { tool } from "@opencode-ai/plugin";
 import { createLogger } from "./lib/logger.js";
 import { EVENT } from "./lib/events.js";
+import { PLUGIN_ID } from "./lib/constants.js";
 
-const PLUGIN_ID = "opencode-plugin-tui";
 const log = createLogger(PLUGIN_ID, "DEBUG_PLUGIN_TUI");
 
-const handleEvent: NonNullable<Hooks["event"]> = async (input) => {
-  const { event } = input;
+const handleEvent = async ({ event }: { event: Event }): Promise<void> => {
   log.debug(`[EVENT] ${event.type}`);
 
   switch (event.type) {
