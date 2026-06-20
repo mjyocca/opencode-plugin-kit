@@ -7,22 +7,35 @@ import type { Hooks } from "@opencode-ai/plugin"
 // ── Helper Types ────────────────────────────────────────────────────────────
 
 // Extracts the `input` parameter from a hook function signature.
-type InputOf<H> = H extends (input: infer I, output: any) => any
-  ? I
-  : H extends (input: infer I) => any
+type InputOf<H> =
+  H extends (input: infer I, output: any) => any
     ? I
-    : void
+    : H extends (input: infer I) => any
+      ? I
+      : void
 
 // Extracts the `output` parameter from a hook function signature.
-type OutputOf<H> = H extends (input: any, output: infer O) => any
-  ? O
-  : H extends (...args: any) => any
-    ? void
-    : H
+// For hooks with two parameters, extracts the second parameter.
+// For hooks with one parameter that return Promise<void>, extracts void.
+type OutputOf<H> =
+  H extends (input: any, output: infer O) => any
+    ? O
+    : H extends (input: any) => Promise<infer R>
+      ? R
+      : H extends (...args: any) => any
+        ? void
+        : H
 
 // ── Hook Types Namespace ────────────────────────────────────────────────────
 
 export namespace Hook {
+  // ── Event ────────────────────────────────────────────────────────────────
+
+  export namespace event {
+    export type Input = InputOf<NonNullable<Hooks["event"]>>
+    export type Output = OutputOf<NonNullable<Hooks["event"]>>
+  }
+
   // ── Chat Pipeline ────────────────────────────────────────────────────────
 
   export namespace chat {
