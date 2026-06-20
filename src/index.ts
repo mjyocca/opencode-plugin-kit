@@ -11,6 +11,8 @@ import type { Plugin } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
 import { createLogger } from "./lib/logger.js"
 import { EVENT } from "./lib/events.js"
+import { hooks } from "./lib/hooks.js"
+import type { Hook } from "./lib/hook-types.js"
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -59,50 +61,50 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
 
     // ── Chat Pipeline Hooks ────────────────────────────────────────────────
 
-    // "chat.message": async (input, output) => {
+    // [hooks.chat.message]: async (input: Hook.chat.MessageInput, output: Hook.chat.MessageOutput) => {
     //   // Transform the message before sending to the model
     // },
 
-    // "chat.params": async (input, output) => {
+    // [hooks.chat.params]: async (input: Hook.chat.ParamsInput, output: Hook.chat.ParamsOutput) => {
     //   // Transform request parameters (model, temperature, etc.)
     // },
 
-    // "chat.headers": async (input, output) => {
+    // [hooks.chat.headers]: async (input: Hook.chat.HeadersInput, output: Hook.chat.HeadersOutput) => {
     //   // Add or modify HTTP headers for the request
     // },
 
     // ── Tool Lifecycle Hooks ───────────────────────────────────────────────
 
-    // "tool.execute.before": async (input, output) => {
+    // [hooks.tool.executeBefore]: async (input: Hook.tool.ExecuteBeforeInput, output: Hook.tool.ExecuteBeforeOutput) => {
     //   // Runs before any tool executes
     //   // input.tool — tool name
     //   // input.args — tool arguments
     //   // output.args — modifiable args
-    //   log.debug(`[tool.execute.before] ${input.tool}`)
+    //   log.debug(`[${hooks.tool.executeBefore}] ${input.tool}`)
     // },
 
-    // "tool.execute.after": async (input, output) => {
+    // [hooks.tool.executeAfter]: async (input: Hook.tool.ExecuteAfterInput, output: Hook.tool.ExecuteAfterOutput) => {
     //   // Runs after any tool executes
     //   // input.tool — tool name
     //   // output.result — tool result (modifiable)
-    //   log.debug(`[tool.execute.after] ${input.tool}`)
+    //   log.debug(`[${hooks.tool.executeAfter}] ${input.tool}`)
     // },
 
-    // "tool.definition": async (input, output) => {
+    // [hooks.tool.definition]: async (input: Hook.tool.DefinitionInput, output: Hook.tool.DefinitionOutput) => {
     //   // Transform a tool's definition (description, schema, etc.)
-    //   log.debug(`[tool.definition] ${input.toolID}`)
+    //   log.debug(`[${hooks.tool.definition}] ${input.toolID}`)
     // },
 
     // ── Command Hook ───────────────────────────────────────────────────────
 
-    // "command.execute.before": async (input, output) => {
+    // [hooks.command.executeBefore]: async (input: Hook.command.ExecuteBeforeInput, output: Hook.command.ExecuteBeforeOutput) => {
     //   // Runs before a slash command executes
-    //   log.debug(`[command.execute.before] ${input.command}`)
+    //   log.debug(`[${hooks.command.executeBefore}] ${input.command}`)
     // },
 
     // ── Shell Environment Hook ─────────────────────────────────────────────
 
-    // "shell.env": async (input, output) => {
+    // [hooks.shell.env]: async (input: Hook.shell.EnvInput, output: Hook.shell.EnvOutput) => {
     //   // Inject environment variables into all shell execution
     //   // output.env.MY_API_KEY = "secret"
     //   // output.env.PROJECT_ROOT = input.cwd
@@ -110,45 +112,39 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
 
     // ── Permission Hook ────────────────────────────────────────────────────
 
-    // "permission.asked": async (input, output) => {
+    // [hooks.permission.ask]: async (input: Hook.permission.AskInput, output: Hook.permission.AskOutput) => {
     //   // Intercept permission requests
     //   // input.type — permission type
     //   // output.status — "allow" | "deny" | "ask"
-    //   log.debug(`[permission.asked] ${input.type}`)
+    //   log.debug(`[${hooks.permission.ask}] ${input.type}`)
     // },
 
-    // ── Compaction Hook ────────────────────────────────────────────────────
+    // ── Experimental Hooks ─────────────────────────────────────────────────
 
-    // "experimental.session.compacting": async (input, output) => {
+    // [hooks.experimental.session.compacting]: async (input: Hook.experimental.session.CompactingInput, output: Hook.experimental.session.CompactingOutput) => {
     //   // Inject context into compaction prompt or replace it entirely
     //   // output.context.push("## Custom Context\n...")
     //   // output.prompt = "Custom compaction prompt..."
     // },
 
-    // ── Compaction Auto-Continue Hook ──────────────────────────────────────
-
-    // "experimental.compaction.autocontinue": async (input, output) => {
+    // [hooks.experimental.session.compactionAutoContinue]: async (input: Hook.experimental.session.CompactionAutoContinueInput, output: Hook.experimental.session.CompactionAutoContinueOutput) => {
     //   // Set enabled to false to skip the synthetic user "continue" turn
     //   // output.enabled = false
     // },
 
-    // ── Experimental Chat Hooks ────────────────────────────────────────────
-
-    // "experimental.chat.messages.transform": async (input, output) => {
+    // [hooks.experimental.chat.messagesTransform]: async (input: Hook.experimental.chat.MessagesTransformInput, output: Hook.experimental.chat.MessagesTransformOutput) => {
     //   // Transform messages before sending to the model
     // },
 
-    // "experimental.chat.system.transform": async (input, output) => {
+    // [hooks.experimental.chat.systemTransform]: async (input: Hook.experimental.chat.SystemTransformInput, output: Hook.experimental.chat.SystemTransformOutput) => {
     //   // Modify system prompt strings
     // },
 
-    // "experimental.provider.small_model": async (input, output) => {
+    // [hooks.experimental.provider.smallModel]: async (input: Hook.experimental.provider.SmallModelInput, output: Hook.experimental.provider.SmallModelOutput) => {
     //   // Override the small model used for lightweight tasks
     // },
 
-    // ── Experimental Text Complete Hook ────────────────────────────────────
-
-    // "experimental.text.complete": async (input, output) => {
+    // [hooks.experimental.text.complete]: async (input: Hook.experimental.text.CompleteInput, output: Hook.experimental.text.CompleteOutput) => {
     //   // Called when a text part completes
     // },
 
