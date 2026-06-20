@@ -8,7 +8,7 @@ Starter kit for building [opencode](https://opencode.ai) plugins with server and
 - **TUI plugin** — JSX-based terminal UI with slot renderers via `@opentui/solid`
 - **Agent skills** — Guided development workflows loaded automatically
 - **Reference docs** — Comprehensive SDK and architecture guides
-- **Library utilities** — SDK logger, type-safe hook helpers, config patterns
+- **Library utilities** — SDK logger, config patterns
 
 ## Getting Started
 
@@ -77,8 +77,7 @@ src/
 ├── tui.tsx           # TUI plugin — JSX slot renderers
 └── lib/
     ├── constants.ts  # Plugin ID constant
-    ├── logger.ts     # SDK logger + TUI fallback
-    └── hook-types.ts # Derived types from SDK
+    └── logger.ts     # SDK logger + TUI fallback
 
 .agents/skills/       # Development skills (loaded automatically)
 ├── plugin-quick-start/SKILL.md

@@ -5,7 +5,7 @@
 A **starter kit** for building opencode plugins with **server** (SDK hooks, tools, events) and **TUI** (JSX-based terminal UI) support.
 
 **You get:**
-- **Library primitives** — SDK logger, type-safe hook helpers, config patterns
+- **Library primitives** — SDK logger, config patterns
 - **Reference documentation** — Comprehensive guides for plugin architecture, SDK, and ecosystem
 - **Agent skills** — Action-oriented guides for common plugin development tasks
 - **Working examples** — Server plugin with SDK logger, TUI plugin with slots and events
@@ -41,8 +41,7 @@ your-plugin-name/
 │   ├── tui.tsx           # TUI plugin — JSX slot renderers
 │   └── lib/
 │       ├── constants.ts  # Plugin ID and constants
-│       ├── logger.ts     # SDK logger + TUI fallback
-│       └── hook-types.ts # Derived types from SDK
+│       └── logger.ts     # SDK logger + TUI fallback
 ├── docs/
 │   └── instructions/
 │       ├── opencode-plugin-architecture.md  # Comprehensive opencode reference
