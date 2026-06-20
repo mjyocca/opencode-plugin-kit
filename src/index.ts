@@ -3,24 +3,19 @@
  *
  * Comprehensive stub template with all available hooks, events, and patterns.
  * Uncomment and implement the hooks you need for your plugin.
+ *
+ * Reference implementations: src/examples/
  */
 
 import type { Plugin } from "@opencode-ai/plugin"
+import type { Event } from "@opencode-ai/sdk"
 import { tool } from "@opencode-ai/plugin"
+import { createLogger } from "./lib/logger.js"
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const PLUGIN_ID = "opencode-plugin-tui"
-const DEBUG = process.env.DEBUG_PLUGIN_TUI === "1"
-
-// ─── Logging ────────────────────────────────────────────────────────────────
-
-const log = {
-  info:  (msg: string) => { process.stderr.write(`[${PLUGIN_ID}] ${msg}\n`) },
-  warn:  (msg: string) => { process.stderr.write(`[${PLUGIN_ID}] WARN: ${msg}\n`) },
-  error: (msg: string) => { process.stderr.write(`[${PLUGIN_ID}] ERROR: ${msg}\n`) },
-  debug: (msg: string) => { if (DEBUG) process.stderr.write(`[${PLUGIN_ID}] DEBUG: ${msg}\n`) },
-}
+const log = createLogger(PLUGIN_ID, "DEBUG_PLUGIN_TUI")
 
 // ─── Demo Tool ──────────────────────────────────────────────────────────────
 
@@ -95,7 +90,7 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
 
     // "tool.definition": async (input, output) => {
     //   // Transform a tool's definition (description, schema, etc.)
-    //   log.debug(`[tool.definition] ${input.tool}`)
+    //   log.debug(`[tool.definition] ${input.toolID}`)
     // },
 
     // ── Command Hook ───────────────────────────────────────────────────────
@@ -113,18 +108,13 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
     //   // output.env.PROJECT_ROOT = input.cwd
     // },
 
-    // ── Permission Hooks ───────────────────────────────────────────────────
+    // ── Permission Hook ────────────────────────────────────────────────────
 
     // "permission.asked": async (input, output) => {
     //   // Intercept permission requests
-    //   // input.tool — tool requesting permission
-    //   // output.response — "allow" | "deny"
-    //   log.debug(`[permission.asked] ${input.tool}`)
-    // },
-
-    // "permission.replied": async (input) => {
-    //   // Runs after a permission decision is made
-    //   log.debug(`[permission.replied] ${input.tool} → ${input.response}`)
+    //   // input.type — permission type
+    //   // output.status — "allow" | "deny" | "ask"
+    //   log.debug(`[permission.asked] ${input.type}`)
     // },
 
     // ── Compaction Hook ────────────────────────────────────────────────────
@@ -133,6 +123,33 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
     //   // Inject context into compaction prompt or replace it entirely
     //   // output.context.push("## Custom Context\n...")
     //   // output.prompt = "Custom compaction prompt..."
+    // },
+
+    // ── Compaction Auto-Continue Hook ──────────────────────────────────────
+
+    // "experimental.compaction.autocontinue": async (input, output) => {
+    //   // Set enabled to false to skip the synthetic user "continue" turn
+    //   // output.enabled = false
+    // },
+
+    // ── Experimental Chat Hooks ────────────────────────────────────────────
+
+    // "experimental.chat.messages.transform": async (input, output) => {
+    //   // Transform messages before sending to the model
+    // },
+
+    // "experimental.chat.system.transform": async (input, output) => {
+    //   // Modify system prompt strings
+    // },
+
+    // "experimental.provider.small_model": async (input, output) => {
+    //   // Override the small model used for lightweight tasks
+    // },
+
+    // ── Experimental Text Complete Hook ────────────────────────────────────
+
+    // "experimental.text.complete": async (input, output) => {
+    //   // Called when a text part completes
     // },
 
     // ── Event Handler ──────────────────────────────────────────────────────
@@ -144,96 +161,83 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
         // ── Session Events ───────────────────────────────────────────────
 
         case "session.created": {
-          const info = (event as any).properties?.info
-          log.debug(`session.created — id: ${info?.id ?? "(none)"}`)
+          log.debug(`session.created — id: ${event.properties.info.id}`)
           break
         }
 
         case "session.updated": {
-          const info = (event as any).properties?.info
-          log.debug(`session.updated — id: ${info?.id ?? "(none)"}`)
+          log.debug(`session.updated — id: ${event.properties.info.id}`)
           break
         }
 
         case "session.idle": {
-          const sessionId = (event as any).properties?.sessionID
-          log.debug(`session.idle — sessionID: ${sessionId ?? "(none)"}`)
+          log.debug(`session.idle — sessionID: ${event.properties.sessionID}`)
           break
         }
 
         case "session.deleted": {
-          const sessionId = (event as any).properties?.sessionID
-          log.debug(`session.deleted — sessionID: ${sessionId ?? "(none)"}`)
+          log.debug(`session.deleted — id: ${event.properties.info.id}`)
           break
         }
 
         case "session.compacted": {
-          const sessionId = (event as any).properties?.sessionID
-          log.debug(`session.compacted — sessionID: ${sessionId ?? "(none)"}`)
+          log.debug(`session.compacted — sessionID: ${event.properties.sessionID}`)
           break
         }
 
         case "session.error": {
-          const sessionId = (event as any).properties?.sessionID
-          log.debug(`session.error — sessionID: ${sessionId ?? "(none)"}`)
+          log.debug(`session.error — sessionID: ${event.properties.sessionID ?? "(none)"}`)
           break
         }
 
         case "session.status": {
-          const sessionId = (event as any).properties?.sessionID
-          log.debug(`session.status — sessionID: ${sessionId ?? "(none)"}`)
+          log.debug(`session.status — sessionID: ${event.properties.sessionID}, status: ${event.properties.status.type}`)
           break
         }
 
         case "session.diff": {
-          const sessionId = (event as any).properties?.sessionID
-          log.debug(`session.diff — sessionID: ${sessionId ?? "(none)"}`)
+          log.debug(`session.diff — sessionID: ${event.properties.sessionID}, files: ${event.properties.diff.length}`)
           break
         }
 
         // ── Message Events ───────────────────────────────────────────────
 
         case "message.updated": {
-          const info = (event as any).properties?.info
-          log.debug(`message.updated — session: ${info?.sessionID}, id: ${info?.id}`)
+          log.debug(`message.updated — session: ${event.properties.info.sessionID}, id: ${event.properties.info.id}`)
           break
         }
 
         case "message.removed": {
-          const sessionId = (event as any).properties?.sessionID
-          const messageId = (event as any).properties?.messageID
-          log.debug(`message.removed — session: ${sessionId}, message: ${messageId}`)
+          log.debug(`message.removed — session: ${event.properties.sessionID}, message: ${event.properties.messageID}`)
           break
         }
 
         case "message.part.updated": {
-          const info = (event as any).properties?.info
-          log.debug(`message.part.updated — session: ${info?.sessionID}`)
+          log.debug(`message.part.updated — session: ${event.properties.part.sessionID}, part: ${event.properties.part.type}`)
           break
         }
 
         case "message.part.removed": {
-          log.debug(`message.part.removed`)
+          log.debug(`message.part.removed — session: ${event.properties.sessionID}, part: ${event.properties.partID}`)
           break
         }
 
         // ── Todo Events ──────────────────────────────────────────────────
 
         case "todo.updated": {
-          const sessionId = (event as any).properties?.sessionID
-          log.debug(`todo.updated — sessionID: ${sessionId ?? "(none)"}`)
+          log.debug(`todo.updated — sessionID: ${event.properties.sessionID}`)
           break
         }
 
         // ── File Events ──────────────────────────────────────────────────
 
         case "file.edited": {
-          log.debug(`file.edited`)
+          log.debug(`file.edited — file: ${event.properties.file}`)
           break
         }
 
         case "file.watcher.updated": {
-          log.debug(`file.watcher.updated`)
+          log.debug(`file.watcher.updated — file: ${event.properties.file}, event: ${event.properties.event}`)
           break
         }
 
@@ -245,21 +249,26 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
         }
 
         case "lsp.client.diagnostics": {
-          log.debug(`lsp.client.diagnostics`)
+          log.debug(`lsp.client.diagnostics — server: ${event.properties.serverID}`)
           break
         }
 
         // ── Command Events ───────────────────────────────────────────────
 
         case "command.executed": {
-          log.debug(`command.executed`)
+          log.debug(`command.executed — name: ${event.properties.name}`)
           break
         }
 
         // ── Installation Events ──────────────────────────────────────────
 
         case "installation.updated": {
-          log.debug(`installation.updated`)
+          log.debug(`installation.updated — version: ${event.properties.version}`)
+          break
+        }
+
+        case "installation.update-available": {
+          log.debug(`installation.update-available — version: ${event.properties.version}`)
           break
         }
 
@@ -270,20 +279,66 @@ export const PluginTuiServer: Plugin = async ({ client, project, directory, work
           break
         }
 
+        case "server.instance.disposed": {
+          log.debug(`server.instance.disposed — directory: ${event.properties.directory}`)
+          break
+        }
+
         // ── TUI Events ───────────────────────────────────────────────────
 
         case "tui.prompt.append": {
-          log.debug(`tui.prompt.append`)
+          log.debug(`tui.prompt.append — text: ${event.properties.text}`)
           break
         }
 
         case "tui.command.execute": {
-          log.debug(`tui.command.execute`)
+          log.debug(`tui.command.execute — command: ${event.properties.command}`)
           break
         }
 
         case "tui.toast.show": {
-          log.debug(`tui.toast.show`)
+          log.debug(`tui.toast.show — message: ${event.properties.message}`)
+          break
+        }
+
+        // ── Permission Events ────────────────────────────────────────────
+
+        case "permission.updated": {
+          log.debug(`permission.updated — type: ${event.properties.type}`)
+          break
+        }
+
+        case "permission.replied": {
+          log.debug(`permission.replied — session: ${event.properties.sessionID}, response: ${event.properties.response}`)
+          break
+        }
+
+        // ── VCS Events ───────────────────────────────────────────────────
+
+        case "vcs.branch.updated": {
+          log.debug(`vcs.branch.updated — branch: ${event.properties.branch ?? "(none)"}`)
+          break
+        }
+
+        // ── PTY Events ───────────────────────────────────────────────────
+
+        case "pty.created": {
+          log.debug(`pty.created — id: ${event.properties.info.id}, command: ${event.properties.info.command}`)
+          break
+        }
+
+        case "pty.updated": {
+          log.debug(`pty.updated — id: ${event.properties.info.id}`)
+          break
+        }
+
+        case "pty.exited": {
+          log.debug(`pty.exited — id: ${event.properties.id}, exitCode: ${event.properties.exitCode}`)
+          break
+        }
+
+        case "pty.deleted": {
+          log.debug(`pty.deleted — id: ${event.properties.id}`)
           break
         }
       }
