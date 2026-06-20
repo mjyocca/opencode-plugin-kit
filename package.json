@@ -44,6 +44,8 @@
     "build:check": "tsc --noEmit",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
+    "dev:install": "node scripts/dev-install.mjs",
+    "dev:uninstall": "node scripts/dev-uninstall.mjs",
     "prepublishOnly": "pnpm run build:check && pnpm run build"
   },
   "peerDependencies": {
