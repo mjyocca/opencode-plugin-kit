@@ -81,6 +81,7 @@ src/
 ├── plugin-quick-start/SKILL.md
 ├── plugin-server/SKILL.md
 ├── plugin-tui/SKILL.md
+├── solidjs-tui/SKILL.md
 ├── plugin-logging/SKILL.md
 ├── plugin-config-patterns/SKILL.md
 ├── opencode-agents/SKILL.md
@@ -103,7 +104,8 @@ Agent skills are loaded automatically when you open this project in opencode.
 
 **Next steps:**
 - `plugin-server` — Advanced hook patterns, client API reference
-- `plugin-tui` — JSX components, SolidJS signals, theme colors
+- `plugin-tui` — JSX components, slots, theme colors, troubleshooting
+- `solidjs-tui` — SolidJS primitives for TUI (signals, effects, stores, lifecycle)
 - `plugin-logging` — Structured logging, debug modes
 - `plugin-config-patterns` — Config resolution, API key lookup
 

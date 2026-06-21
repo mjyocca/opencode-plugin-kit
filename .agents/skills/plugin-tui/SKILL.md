@@ -1,6 +1,6 @@
 ---
 name: plugin-tui
-description: Use ONLY when developing opencode TUI plugins. Covers slot registration, JSX components, SolidJS signals, theme colors, event handling, and known troubleshooting. Use when editing src/tui.tsx or adding TUI plugin functionality.
+description: Use ONLY when developing opencode TUI plugins. Covers slot registration, JSX components (@opentui/solid), reactive state basics, theme colors, event handling, and troubleshooting. Uses SolidJS for reactivity—for deep SolidJS primitives and advanced patterns, see solidjs-tui skill.
 ---
 
 # TUI Plugin Development
@@ -126,6 +126,8 @@ const [value, setValue] = createSignal(0);
 ```
 
 Signals trigger automatic re-renders when changed.
+
+**For advanced SolidJS patterns** — `createMemo` (derived state), `createEffect` (side effects), `createResource` (async data), `createStore` (nested state), control flows (`<For>`, `<Index>`, `<Switch>`), and lifecycle — see **[`solidjs-tui`](../solidjs-tui/SKILL.md)**.
 
 ## Event System
 
@@ -317,6 +319,17 @@ function CommandOutputDialog(props: { api: any; title: string; output: string })
   );
 }
 ```
+
+---
+
+## Related Skills
+
+- **[`solidjs-tui`](../solidjs-tui/SKILL.md)** — SolidJS primitives, reactivity, stores, lifecycle patterns for TUI
+- **[`plugin-logging`](../plugin-logging/SKILL.md)** — Structured logging for TUI plugins
+- **[`plugin-config-patterns`](../plugin-config-patterns/SKILL.md)** — Reading config in TUI context
+- **[`opencode-troubleshooting`](../opencode-troubleshooting/SKILL.md)** — TUI loading and runtime issues
+
+---
 
 ## Troubleshooting
 

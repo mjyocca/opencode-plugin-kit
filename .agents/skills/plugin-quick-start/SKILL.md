@@ -355,6 +355,19 @@ copyFileSync("src/tui.tsx", "dist/tui.tsx")
 | `session_prompt` | Below chat input (wraps prompt component) |
 | `app_bottom` | Always visible |
 
+### Reactive State in TUI Plugins
+
+The TUI slot example above uses `createSignal` for basic reactive state. For production TUI plugins, consider these patterns:
+
+- **Derived values** → `createMemo` (caches computed values, avoids redundant calculations)
+- **Side effects** → `createEffect` (trigger toasts, logging, API calls when state changes)
+- **Async data** → `createResource` (fetch with built-in loading/error states)
+- **Nested state** → `createStore` (fine-grained updates for complex objects/arrays)
+- **Lists** → `<For>` / `<Index>` (efficient list rendering)
+- **Conditionals** → `<Show>` / `<Switch>` (declarative control flow)
+
+See **[`solidjs-tui`](../solidjs-tui/SKILL.md)** for complete SolidJS patterns tailored to TUI development.
+
 ---
 
 ## Adding Logging
@@ -497,6 +510,9 @@ See [opencode-troubleshooting](../opencode-troubleshooting/SKILL.md) for compreh
 
 ## See Also
 
+- **[`solidjs-tui`](../solidjs-tui/SKILL.md)** — SolidJS primitives and patterns for TUI development
+- **[`plugin-server`](../plugin-server/SKILL.md)** — Server plugin development patterns
+- **[`plugin-tui`](../plugin-tui/SKILL.md)** — TUI plugin development reference
 - [AGENTS.md](../../../AGENTS.md) — Project overview, available skills, common first tasks
 - [OpenCode Plugin Architecture](../../../docs/instructions/opencode-plugin-architecture.md) — Comprehensive reference
 - [SDK Reference](../../../docs/instructions/sdk-reference.md) — Complete SDK API documentation

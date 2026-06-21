@@ -230,7 +230,8 @@ See the [architecture reference](./docs/instructions/opencode-plugin-architectur
 | `plugin-quick-start` | First tasks: add tool, handle event, add TUI slot — start here for new plugins |
 | `plugin-spec` | Defining plugin vision — problem, use cases, design, implementation plan |
 | `plugin-server` | Developing server plugins — hook registration, tool definitions, event handling |
-| `plugin-tui` | Developing TUI plugins — slot registration, JSX components, SolidJS signals |
+| `plugin-tui` | TUI plugin development — slots, components, theme, events, troubleshooting |
+| `solidjs-tui` | SolidJS for TUI — signals, effects, memos, resources, stores, control flows, lifecycle |
 | `plugin-logging` | Logging patterns — SDK structured logging, TUI fallback, debug modes |
 | `plugin-config-patterns` | Config resolution, JSONC parsing, API key lookup, runtime paths |
 | `opencode-agents` | Configuring or creating agents — permissions, subagents, agent options |

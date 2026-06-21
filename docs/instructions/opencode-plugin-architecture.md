@@ -347,6 +347,10 @@ Always use optional chaining (`?.`) in TUI plugins as APIs may not be available 
 
 ## TUI Plugin Architecture
 
+TUI plugins are TypeScript/JSX modules that render terminal UI components using SolidJS for reactivity.
+
+For basic patterns, see the examples below. For deep SolidJS primitives and advanced reactive patterns, see the **`solidjs-tui` skill** at `.agents/skills/solidjs-tui/SKILL.md`.
+
 ### File Requirements
 
 - **Must** be named `.tsx` (not `.js` or `.jsx`)
@@ -445,6 +449,8 @@ const [value, setValue] = createSignal(0)
 ```
 
 Signals trigger automatic re-renders when changed.
+
+**For advanced SolidJS patterns** including memos, effects, resources, stores, control flows, and lifecycle management, see the **`solidjs-tui` skill** at `.agents/skills/solidjs-tui/SKILL.md`.
 
 ### Event System
 
