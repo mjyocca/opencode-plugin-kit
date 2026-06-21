@@ -5,7 +5,7 @@
  * 
  * This pattern demonstrates how to:
  * - Add status information below the prompt
- * - Show contextual hints, warnings, or quota info
+ * - Show contextual hints, warnings, or usage info
  * - Maintain full prompt functionality while extending the UI
  * 
  * Key points:

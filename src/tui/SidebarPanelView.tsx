@@ -8,7 +8,7 @@ import { TextAttributes } from "@opentui/core";
  * Used: src/tui.tsx sidebar_content slot registration
  * Props: api (theme/context), statusText (signal for dynamic content)
  */
-export function SidebarPanel(props: { api: TuiPluginApi; statusText: () => string }) {
+export function SidebarPanelView(props: { api: TuiPluginApi; statusText: () => string }) {
   const theme = () => props.api.theme.current;
 
   return (

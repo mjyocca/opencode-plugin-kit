@@ -216,7 +216,7 @@ const config = await client.config.get()
 
 ```ts
 const configResp = await client.config.get()
-const quotaConfig = configResp.data?.experimental?.quotaToast
+const pluginConfig = configResp.data?.experimental?.pluginConfig
 ```
 
 #### `client.config.providers()`
@@ -1111,7 +1111,7 @@ return {
 // Server plugin
 await client.tui.showToast({
   body: {
-    message: "Quota: 85% remaining",
+message: "Report: 85% remaining",
     variant: "info",
     duration: 9000,
   },
