@@ -478,7 +478,7 @@ After completing these first tasks, explore:
 2. **[plugin-tui](../plugin-tui/SKILL.md)** — JSX components, SolidJS signals, theme colors
 3. **[plugin-logging](../plugin-logging/SKILL.md)** — Structured logging, debug modes, filter commands
 4. **[plugin-config-patterns](../plugin-config-patterns/SKILL.md)** — Config resolution, API key lookup
-5. **[SDK Reference](../../docs/instructions/sdk-reference.md)** — Complete SDK API documentation
+5. **[SDK Reference](../../../docs/instructions/sdk-reference.md)** — Complete SDK API documentation
 
 ---
 
@@ -497,6 +497,6 @@ See [opencode-troubleshooting](../opencode-troubleshooting/SKILL.md) for compreh
 
 ## See Also
 
-- [AGENTS.md](../../AGENTS.md) — Project overview, available skills, common first tasks
-- [OpenCode Plugin Architecture](../../docs/instructions/opencode-plugin-architecture.md) — Comprehensive reference
-- [SDK Reference](../../docs/instructions/sdk-reference.md) — Complete SDK API documentation
+- [AGENTS.md](../../../AGENTS.md) — Project overview, available skills, common first tasks
+- [OpenCode Plugin Architecture](../../../docs/instructions/opencode-plugin-architecture.md) — Comprehensive reference
+- [SDK Reference](../../../docs/instructions/sdk-reference.md) — Complete SDK API documentation

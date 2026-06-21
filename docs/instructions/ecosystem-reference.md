@@ -21,13 +21,6 @@ For the complete overview of the plugin architecture, see [OpenCode Plugin Archi
 
 ---
 
-
-| Plugin | Description | GitHub |
-|--------|-------------|--------|
-
-
----
-
 ## Contributing to the Ecosystem
 
 Want to add your OpenCode project to the official ecosystem?

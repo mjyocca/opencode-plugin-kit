@@ -465,6 +465,5 @@ return resolved.trim()  // Always trim whitespace
 
 ## See Also
 
-- [Library Primitives Spec](../../specs/features/0001-library-primitives.md) — Full specification for config resolution
-- [SDK Reference](../../docs/instructions/sdk-reference.md) — `client.config.get()` API
+- [SDK Reference](../../../docs/instructions/sdk-reference.md) — `client.config.get()` API
 - [plugin-server](../plugin-server/SKILL.md) — Server plugin development patterns

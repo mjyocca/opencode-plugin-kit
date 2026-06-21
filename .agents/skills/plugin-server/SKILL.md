@@ -120,7 +120,7 @@ event: async ({ event }) => {
 | `client.tui.showToast({ body: { message, variant, duration } })` | Show toast notification |
 | `client.app.log({ body: { service, level, message, extra } })` | Structured logging |
 
-For complete SDK reference, see [SDK Reference](../../docs/instructions/sdk-reference.md).
+For complete SDK reference, see [SDK Reference](../../../docs/instructions/sdk-reference.md).
 
 ## Toast Notifications
 

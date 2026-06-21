@@ -408,7 +408,7 @@ export function createLogger(pluginId: string, debugEnvVar?: string): Omit<Logge
 
 ## See Also
 
-- [SDK Reference](../../docs/instructions/sdk-reference.md) — Complete `client.app.log()` documentation
+- [SDK Reference](../../../docs/instructions/sdk-reference.md) — Complete `client.app.log()` documentation
 - [plugin-server](../plugin-server/SKILL.md) — Server plugin development patterns
 - [plugin-tui](../plugin-tui/SKILL.md) — TUI plugin development patterns
 - [opencode-troubleshooting](../opencode-troubleshooting/SKILL.md) — Debug logging troubleshooting
