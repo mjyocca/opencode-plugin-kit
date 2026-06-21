@@ -1,7 +1,7 @@
 {
-  "name": "opencode-plugin-tui",
+  "name": "opencode-plugin-kit",
   "version": "0.0.0",
-  "description": "Scaffold template for building opencode plugins with server + TUI support",
+  "description": "Starter kit for building opencode plugins with server + TUI support",
   "keywords": [
     "opencode",
     "opencode-plugin",

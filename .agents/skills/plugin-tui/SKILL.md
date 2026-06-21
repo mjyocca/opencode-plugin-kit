@@ -140,23 +140,16 @@ api.lifecycle.onDispose(() => {
 });
 ```
 
-### Available Events
+### Common TUI Events
 
-| Event | Properties |
-|-------|------------|
-| `session.idle` | `sessionID` |
-| `session.updated` | `info.id`, `info.modelID`, `info.providerID` |
-| `session.compacted` | `sessionID` |
-| `session.created` | `info` (Session object) |
-| `session.deleted` | `sessionID` |
-| `message.updated` | `info.sessionID`, `info.id`, `info.role`, `info.tokens`, `info.cost` |
-| `message.removed` | `sessionID`, `messageID` |
-| `message.part.updated` | `info.sessionID`, `info.id` |
-| `message.part.removed` | — |
-| `tui.session.select` | `sessionID` |
-| `tui.prompt.append` | — |
-| `tui.command.execute` | — |
-| `tui.toast.show` | — |
+| Event | When |
+|-------|------|
+| `session.idle` | Session waiting for input |
+| `session.updated` | Session metadata changed |
+| `message.updated` | Message content changed |
+| `tui.session.select` | User selected a session in TUI |
+
+**Full event list:** See [Event Reference](../../docs/instructions/opencode-plugin-architecture.md#event-reference) or [SDK Event type](https://github.com/anomalyco/opencode/blob/dev/packages/sdk/js/src/gen/types.gen.ts)
 
 ## Lifecycle & Cleanup
 
@@ -202,14 +195,31 @@ if (existsSync(path)) {
 
 ## Debug Logging
 
+**Prefer SDK logging with fallback to stderr:**
+
 ```ts
-process.stderr.write("[my-plugin-tui] message\n");
+// TUI plugins use api.client with optional chaining
+await api.client?.app?.log?.({
+  body: {
+    service: "my-plugin-tui",
+    level: "info",
+    message: "TUI initialized",
+    extra: { someData: "value" },
+  },
+})
+
+// Fallback to stderr if SDK client not available
+if (!api.client?.app?.log) {
+  process.stderr.write("[my-plugin-tui] TUI initialized\n")
+}
 ```
 
 Filter logs:
 ```bash
 opencode --log-level DEBUG --print-logs 2>&1 | grep "my-plugin-tui"
 ```
+
+See [plugin-logging](../plugin-logging/SKILL.md) for complete patterns.
 
 ## Slot Component Signature
 
@@ -257,7 +267,7 @@ api.ui.toast?.({
 });
 ```
 
-**Warning:** `api.ui.toast` is untested — may or may not exist.
+**Note:** Always use optional chaining (`?.`) in TUI plugins as APIs may not be available in all contexts.
 
 ### Markdown
 

@@ -96,69 +96,31 @@ event: async ({ event }) => {
 }
 ```
 
-## All Events
+## Common Events
 
-### Session Events
+| Event | When |
+|-------|------|
+| `session.created` | New session started |
+| `session.idle` | Session waiting for input |
+| `message.updated` | Message content changed |
+| `file.edited` | File was modified |
+| `tool.execute.before` | Before any tool runs |
+| `tool.execute.after` | After any tool completes |
 
-| Event | Properties |
-|-------|------------|
-| `session.created` | `info` (Session object) |
-| `session.updated` | `info` (Session object) |
-| `session.idle` | `sessionID` |
-| `session.deleted` | `sessionID` |
-| `session.compacted` | `sessionID` |
-| `session.error` | `sessionID` |
-| `session.status` | `sessionID` |
-| `session.diff` | `sessionID` |
-
-### Message Events
-
-| Event | Properties |
-|-------|------------|
-| `message.updated` | `info.sessionID`, `info.id`, `info.role`, `info.tokens`, `info.cost` |
-| `message.removed` | `sessionID`, `messageID` |
-| `message.part.updated` | `info.sessionID`, `info.id` |
-| `message.part.removed` | — |
-
-### Tool Events
-
-| Event | Properties |
-|-------|------------|
-| `tool.execute.before` | `input.tool`, `input.args`, `output.args` |
-| `tool.execute.after` | `input.tool`, `output.result` |
-
-### Permission Events
-
-| Event | Properties |
-|-------|------------|
-| `permission.asked` | `tool` |
-| `permission.replied` | `tool`, `response` |
-
-### Other Events
-
-| Event | Properties |
-|-------|------------|
-| `todo.updated` | `sessionID` |
-| `file.edited` | — |
-| `file.watcher.updated` | — |
-| `lsp.updated` | — |
-| `lsp.client.diagnostics` | — |
-| `command.executed` | — |
-| `installation.updated` | — |
-| `server.connected` | — |
-| `tui.prompt.append` | — |
-| `tui.command.execute` | — |
-| `tui.toast.show` | — |
-| `shell.env` | `input.cwd`, `output.env` |
+**Full event list:** See [Event Reference](../../docs/instructions/opencode-plugin-architecture.md#event-reference) or [SDK Event type](https://github.com/anomalyco/opencode/blob/dev/packages/sdk/js/src/gen/types.gen.ts)
 
 ## Client API
 
 | Method | Purpose |
 |--------|---------|
 | `client.session.messages({ path: { id } })` | Get session messages |
+| `client.session.get({ path: { id } })` | Get session metadata (model, provider, parentID) |
+| `client.config.get()` | Get merged config |
 | `client.config.providers()` | Get provider catalog (for pricing) |
-| `client.tui.showToast({ body: { message, variant } })` | Show toast notification |
-| `client.app.log({ level, message })` | Log to opencode |
+| `client.tui.showToast({ body: { message, variant, duration } })` | Show toast notification |
+| `client.app.log({ body: { service, level, message, extra } })` | Structured logging |
+
+For complete SDK reference, see [SDK Reference](../../docs/instructions/sdk-reference.md).
 
 ## Toast Notifications
 
@@ -177,18 +139,35 @@ Toasts are **non-blocking** — always `.catch(() => {})` to prevent unhandled r
 
 ## Logging
 
-Use `process.stderr.write`, not `console.log`:
+**Always use `client.app.log()` in server plugins:**
 
 ```ts
-const DEBUG = process.env.DEBUG_MY_PLUGIN === "1"
-
-const log = {
-  info:  (msg: string) => { process.stderr.write(`[my-plugin] ${msg}\n`) },
-  warn:  (msg: string) => { process.stderr.write(`[my-plugin] WARN: ${msg}\n`) },
-  error: (msg: string) => { process.stderr.write(`[my-plugin] ERROR: ${msg}\n`) },
-  debug: (msg: string) => { if (DEBUG) process.stderr.write(`[my-plugin] DEBUG: ${msg}\n`) },
+export const MyPlugin: Plugin = async ({ client }) => {
+  await client.app.log({
+    body: {
+      service: "my-plugin",
+      level: "info",
+      message: "Plugin initialized",
+      extra: { project, directory },
+    },
+  })
+  
+  return {
+    event: async ({ event }) => {
+      await client.app.log({
+        body: {
+          service: "my-plugin",
+          level: "debug",
+          message: `Event: ${event.type}`,
+          extra: { sessionID: event.properties.sessionID },
+        },
+      })
+    },
+  }
 }
 ```
+
+See [plugin-logging](../plugin-logging/SKILL.md) for complete patterns including debug modes and TUI fallback.
 
 ## Config Loading
 

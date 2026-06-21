@@ -43,8 +43,8 @@ export const PluginTuiServer: Plugin = async ({
     args: {},
     execute: async () => {
       return {
-        title: "Plugin TUI — Server",
-        output: "opencode-plugin-tui server plugin is active.",
+        title: "Plugin Kit — Server",
+        output: "opencode-plugin-kit server plugin is active.",
       };
     },
   });

@@ -85,24 +85,53 @@ Systematic troubleshooting steps for common opencode issues. For full architectu
 
 ## Debug Logging
 
-### Server Plugin
+### Server Plugin (SDK Structured Logging)
+
+**Recommended approach:**
 
 ```ts
-const DEBUG = process.env.DEBUG_MY_PLUGIN === "1"
-
-const log = {
-  info:  (msg: string) => { process.stderr.write(`[my-plugin] ${msg}\n`) },
-  warn:  (msg: string) => { process.stderr.write(`[my-plugin] WARN: ${msg}\n`) },
-  error: (msg: string) => { process.stderr.write(`[my-plugin] ERROR: ${msg}\n`) },
-  debug: (msg: string) => { if (DEBUG) process.stderr.write(`[my-plugin] DEBUG: ${msg}\n`) },
+export const MyPlugin: Plugin = async ({ client }) => {
+  await client.app.log({
+    body: {
+      service: "my-plugin",
+      level: "info",
+      message: "Plugin initialized",
+      extra: { project, directory },
+    },
+  })
+  
+  return {
+    event: async ({ event }) => {
+      await client.app.log({
+        body: {
+          service: "my-plugin",
+          level: "debug",
+          message: `Event: ${event.type}`,
+          extra: { sessionID: event.properties.sessionID },
+        },
+      })
+    },
+  }
 }
 ```
 
-Run with: `DEBUG_MY_PLUGIN=1 opencode`
+Levels: `debug`, `info`, `warn`, `error`.
 
-### TUI Plugin
+Run with: `DEBUG_MY_PLUGIN=1 opencode` (implement debug filtering in your logger)
+
+### TUI Plugin (SDK Fallback to stderr)
 
 ```ts
+// Prefer SDK if available
+await api.client?.app?.log?.({
+  body: {
+    service: "my-plugin-tui",
+    level: "info",
+    message: "TUI initialized",
+  },
+})
+
+// Fallback to stderr
 process.stderr.write("[my-plugin-tui] message\n")
 ```
 
@@ -112,20 +141,7 @@ process.stderr.write("[my-plugin-tui] message\n")
 opencode --log-level DEBUG --print-logs 2>&1 | grep "my-plugin"
 ```
 
-### Structured Logging (SDK)
-
-```ts
-await client.app.log({
-  body: {
-    service: "my-plugin",
-    level: "info",
-    message: "Plugin initialized",
-    extra: { foo: "bar" },
-  },
-})
-```
-
-Levels: `debug`, `info`, `warn`, `error`.
+See [plugin-logging](../plugin-logging/SKILL.md) for complete patterns.
 
 ---
 

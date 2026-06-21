@@ -56,7 +56,7 @@ function SidebarPanel(props: { api: TuiPluginApi; statusText: () => string }) {
   return (
     <box padding={1}>
       <text attributes={TextAttributes.BOLD} fg={theme().text}>
-        Plugin TUI
+        Plugin Kit
       </text>
       <text fg={theme().textMuted}>
         {"\n"}

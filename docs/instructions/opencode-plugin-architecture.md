@@ -162,93 +162,24 @@ For complete SDK reference, see [SDK Reference](./sdk-reference.md).
 
 All events available via the `event` hook. Subscribe with `event: async ({ event }) => { ... }`.
 
-### Command Events
+### Common Events
 
-| Event | Properties |
-|-------|------------|
-| `command.executed` | — |
+| Event | When |
+|-------|------|
+| `session.created` | New session started |
+| `session.idle` | Session waiting for input |
+| `message.updated` | Message content changed |
+| `file.edited` | File was modified |
+| `tool.execute.before` | Before any tool runs |
+| `tool.execute.after` | After any tool completes |
 
-### File Events
+### Event Type Reference
 
-| Event | Properties |
-|-------|------------|
-| `file.edited` | — |
-| `file.watcher.updated` | — |
+**Full event list and properties:** The `Event` type from `@opencode-ai/sdk` includes 34+ event types across categories: session, message, file, tool, LSP, TUI, permission, PTY, VCS, and more.
 
-### Installation Events
-
-| Event | Properties |
-|-------|------------|
-| `installation.updated` | — |
-
-### LSP Events
-
-| Event | Properties |
-|-------|------------|
-| `lsp.client.diagnostics` | — |
-| `lsp.updated` | — |
-
-### Message Events
-
-| Event | Properties |
-|-------|------------|
-| `message.part.removed` | — |
-| `message.part.updated` | `info.sessionID`, `info.id` |
-| `message.removed` | `sessionID`, `messageID` |
-| `message.updated` | `info.sessionID`, `info.id`, `info.role`, `info.tokens`, `info.cost` |
-
-### Permission Events
-
-| Event | Properties |
-|-------|------------|
-| `permission.asked` | `tool` |
-| `permission.replied` | `tool`, `response` |
-
-### Server Events
-
-| Event | Properties |
-|-------|------------|
-| `server.connected` | — |
-
-### Session Events
-
-| Event | Properties |
-|-------|------------|
-| `session.created` | `info` (Session object) |
-| `session.compacted` | `sessionID` |
-| `session.deleted` | `sessionID` |
-| `session.diff` | `sessionID` |
-| `session.error` | `sessionID` |
-| `session.idle` | `sessionID` |
-| `session.status` | `sessionID` |
-| `session.updated` | `info` (Session object) |
-
-### Todo Events
-
-| Event | Properties |
-|-------|------------|
-| `todo.updated` | `sessionID` |
-
-### Shell Events
-
-| Event | Properties |
-|-------|------------|
-| `shell.env` | `input.cwd`, `output.env` (modifiable) |
-
-### Tool Events
-
-| Event | Properties |
-|-------|------------|
-| `tool.execute.before` | `input.tool`, `input.args`, `output.args` |
-| `tool.execute.after` | `input.tool`, `output.result` |
-
-### TUI Events
-
-| Event | Properties |
-|-------|------------|
-| `tui.prompt.append` | — |
-| `tui.command.execute` | — |
-| `tui.toast.show` | — |
+- **SDK type reference:** [Event type in SDK source](https://github.com/anomalyco/opencode/blob/dev/packages/sdk/js/src/gen/types.gen.ts)
+- **Type-safe access:** `event.type` is typed as `Event["type"]` (union of all event strings)
+- **Runtime type guards:** Use `event.type === "session.created"` for type narrowing
 
 ---
 
@@ -299,131 +230,40 @@ await client.tui.showToast({
 
 ## SDK Client Reference
 
-This section provides a quick overview of the SDK. For complete API documentation, method signatures, and usage patterns, see [SDK Reference](./sdk-reference.md).
+The OpenCode SDK provides a client for interacting with sessions, files, config, and more.
 
-Install: `npm install @opencode-ai/sdk`
+**Complete API documentation:** See [SDK Reference](./sdk-reference.md) for full method signatures, usage patterns, and examples.
 
-### Create Client
-
-```ts
-// Start server + client
-import { createOpencode } from "@opencode-ai/sdk"
-const { client } = await createOpencode()
-
-// Client only (connect to existing server)
-import { createOpencodeClient } from "@opencode-ai/sdk"
-const client = createOpencodeClient({ baseUrl: "http://localhost:4096" })
-```
-
-### Key APIs
-
-#### Global
-
-| Method | Response |
-|--------|----------|
-| `client.global.health()` | `{ healthy: true, version: string }` |
-
-#### App
-
-| Method | Response |
-|--------|----------|
-| `client.app.log({ body })` | `boolean` |
-| `client.app.agents()` | `Agent[]` |
-
-#### Project
-
-| Method | Response |
-|--------|----------|
-| `client.project.list()` | `Project[]` |
-| `client.project.current()` | `Project` |
-
-#### Config
-
-| Method | Response |
-|--------|----------|
-| `client.config.get()` | `Config` |
-| `client.config.providers()` | `{ providers: Provider[], default: {...} }` |
-
-#### Sessions
-
-| Method | Notes |
-|--------|-------|
-| `client.session.list()` | Returns `Session[]` |
-| `client.session.get({ path })` | Returns `Session` |
-| `client.session.create({ body })` | Returns `Session` |
-| `client.session.delete({ path })` | Returns `boolean` |
-| `client.session.update({ path, body })` | Returns `Session` |
-| `client.session.messages({ path })` | Returns `{ info: Message, parts: Part[] }[]` |
-| `client.session.prompt({ path, body })` | Sends prompt, returns `AssistantMessage`. Use `body.noReply: true` for context-only |
-| `client.session.command({ path, body })` | Execute slash command |
-| `client.session.shell({ path, body })` | Run shell command |
-| `client.session.abort({ path })` | Abort running session |
-| `client.session.share({ path })` | Share session |
-| `client.session.unshare({ path })` | Unshare session |
-| `client.session.summarize({ path, body })` | Summarize session |
-| `client.session.revert({ path, body })` | Revert a message |
-| `client.session.unrevert({ path })` | Restore reverted messages |
-| `client.session.children({ path })` | List child sessions |
-| `client.session.init({ path, body })` | Analy app and create AGENTS.md |
-| `client.session.fork({ path, body })` | Fork session at message |
-
-#### Files
-
-| Method | Response |
-|--------|----------|
-| `client.find.text({ query })` | Array of matches |
-| `client.find.files({ query })` | `string[]` paths |
-| `client.find.symbols({ query })` | `Symbol[]` |
-| `client.file.read({ query })` | `{ type: "raw" \| "patch", content: string }` |
-| `client.file.status({ query? })` | `File[]` |
-
-#### TUI
-
-| Method | Response |
-|--------|----------|
-| `client.tui.appendPrompt({ body })` | `boolean` |
-| `client.tui.showToast({ body })` | `boolean` |
-| `client.tui.executeCommand({ body })` | `boolean` |
-| `client.tui.openHelp()` | `boolean` |
-| `client.tui.openSessions()` | `boolean` |
-| `client.tui.openThemes()` | `boolean` |
-| `client.tui.openModels()` | `boolean` |
-| `client.tui.submitPrompt()` | `boolean` |
-| `client.tui.clearPrompt()` | `boolean` |
-
-#### Auth
-
-| Method | Response |
-|--------|----------|
-| `client.auth.set({ path, body })` | `boolean` |
-
-#### Events
-
-| Method | Response |
-|--------|----------|
-| `client.event.subscribe()` | SSE stream — `for await (const event of events.stream) { ... }` |
-
-### Structured Output
+### Quick Reference
 
 ```ts
-const result = await client.session.prompt({
-  path: { id: sessionId },
-  body: {
-    parts: [{ type: "text", text: "Research and provide info" }],
-    format: {
-      type: "json_schema",
-      schema: {
-        type: "object",
-        properties: {
-          name: { type: "string" },
-          version: { type: "string" },
-        },
-        required: ["name"],
-      },
-    },
-  },
-})
+// In plugins, client is provided via context
+export const MyPlugin: Plugin = async ({ client }) => {
+  // Logging
+  await client.app.log({ body: { service, level, message, extra } })
+  
+  // Session metadata
+  const session = await client.session.get({ path: { id: sessionID } })
+  const modelID = session.data?.modelID
+  
+  // Config access
+  const config = await client.config.get()
+  const providers = await client.config.providers()
+  
+  // Toast notifications
+  await client.tui.showToast({ body: { message, variant, duration } })
+}
 ```
+
+**Key APIs:**
+- `client.app.*` — Logging, agent listing
+- `client.session.*` — Session lifecycle, messages, prompting
+- `client.config.*` — Config and provider access
+- `client.file.*` — File reading and search
+- `client.tui.*` — TUI control (toasts, prompts, navigation)
+- `client.auth.*` — Authentication management
+
+See [SDK Reference](./sdk-reference.md) for complete documentation.
 
 ---
 
@@ -939,33 +779,15 @@ metadata:
 
 ## Ecosystem
 
-### Community Plugins
+### Official Resources
 
-Browse at [opencode.ai/docs/ecosystem#plugins](https://opencode.ai/docs/ecosystem#plugins)
+| Resource | URL | Description |
+|----------|-----|-------------|
+| Official ecosystem | https://opencode.ai/docs/ecosystem/ | Complete list of plugins, projects, and agents |
+| awesome-opencode | https://github.com/awesome-opencode/awesome-opencode | Community awesome list |
+| opencode.cafe | https://opencode.cafe | Community hub aggregating ecosystem |
 
-Notable plugins:
-- `opencode-helicone-session` — Helicone session headers
-- `opencode-wakatime` — Wakatime tracking
-- `opencode-dynamic-context-pruning` — Token optimization
-- `opencode-vibeguard` — Secret redaction
-- `opencode-notificator` — Desktop notifications
-- `opencode-shell-strategy` — Shell command safety
-
-### Community Projects
-
-Browse at [opencode.ai/docs/ecosystem#projects](https://opencode.ai/docs/ecosystem#projects)
-
-Notable projects:
-- `opencode.nvim` — Neovim plugin
-- `portal` — Mobile-first web UI
-- `OpenChamber` — Web/Desktop/VS Code extension
-- `ai-sdk-provider-opencode-sdk` — Vercel AI SDK provider
-
-### Community Agents
-
-Browse at [opencode.ai/docs/ecosystem#agents](https://opencode.ai/docs/ecosystem#agents)
-
-For a curated reference of ecosystem plugins, projects, and agents, see [Ecosystem Reference](./ecosystem-reference.md).
+See [Ecosystem Reference](./ecosystem-reference.md) for additional curated resources.
 
 ---
 
