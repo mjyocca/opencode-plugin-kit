@@ -74,10 +74,8 @@ pnpm run build:check # Type-check without emitting
 ```
 src/
 ├── index.ts          # Server plugin — hooks, tools, events
-├── tui.tsx           # TUI plugin — JSX slot renderers
-└── lib/
-    ├── constants.ts  # Plugin ID constant
-    └── logger.ts     # SDK logger + TUI fallback
+├── tui.tsx           # TUI plugin entry point — JSX slot registrations
+└── ..
 
 .agents/skills/       # Development skills (loaded automatically)
 ├── plugin-quick-start/SKILL.md

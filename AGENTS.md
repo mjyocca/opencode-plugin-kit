@@ -38,10 +38,8 @@ pnpm run dev
 your-plugin-name/
 ├── src/
 │   ├── index.ts          # Server plugin — hooks, tools, events
-│   ├── tui.tsx           # TUI plugin — JSX slot renderers
-│   └── lib/
-│       ├── constants.ts  # Plugin ID and constants
-│       └── logger.ts     # SDK logger + TUI fallback
+│   ├── tui.tsx           # TUI plugin entry point — JSX slot registrations
+│   └── ..
 ├── docs/
 │   └── instructions/
 │       ├── opencode-plugin-architecture.md  # Comprehensive opencode reference
