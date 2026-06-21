@@ -10,8 +10,8 @@ import { PLUGIN_ID } from "./lib/constants.js";
 import { createLogger } from "./lib/logger.js";
 import {
   HomeBottomView,
-  SidebarPanel,
-  SessionPromptAugmented,
+  SidebarPanelView,
+  SessionPromptAugmentedView,
 } from "./tui/index.js";
 
 const SIDEBAR_ORDER = 300;
@@ -50,7 +50,7 @@ const tui: TuiPlugin = async (api, _options) => {
     order: SIDEBAR_ORDER,
     slots: {
       sidebar_content: (_ctx, _props) => (
-        <SidebarPanel api={api} statusText={statusText} />
+        <SidebarPanelView api={api} statusText={statusText} />
       ),
     },
   });
@@ -68,7 +68,7 @@ const tui: TuiPlugin = async (api, _options) => {
     order: COMPACT_ORDER,
     slots: {
       session_prompt: (_ctx, props) => (
-        <SessionPromptAugmented
+        <SessionPromptAugmentedView
           api={api}
           sessionID={props.session_id}
           visible={props.visible}
