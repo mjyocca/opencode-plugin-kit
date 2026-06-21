@@ -127,17 +127,25 @@ If a plugin tool uses the same name as a built-in tool, the plugin tool takes pr
 
 ### Logging Pattern
 
-Use `process.stderr.write`, not `console.log`:
+**Recommended:** Use `client.app.log()` for structured logging:
 
 ```ts
-const DEBUG = process.env.DEBUG_MY_PLUGIN === "1"
-
-const log = {
-  info:  (msg: string) => { process.stderr.write(`[my-plugin] ${msg}\n`) },
-  warn:  (msg: string) => { process.stderr.write(`[my-plugin] WARN: ${msg}\n`) },
-  error: (msg: string) => { process.stderr.write(`[my-plugin] ERROR: ${msg}\n`) },
-  debug: (msg: string) => { if (DEBUG) process.stderr.write(`[my-plugin] DEBUG: ${msg}\n`) },
+export const MyPlugin: Plugin = async ({ client }) => {
+  await client.app.log({
+    body: {
+      service: "my-plugin",
+      level: "info",  // debug | info | warn | error
+      message: "Plugin initialized",
+      extra: { project: "my-project" },  // optional metadata
+    },
+  })
 }
+```
+
+**TUI fallback:** In TUI plugins where `client` may not be available, use `process.stderr.write`:
+
+```ts
+process.stderr.write("[my-plugin-tui] message\n")
 ```
 
 Filter logs:
@@ -145,6 +153,8 @@ Filter logs:
 ```bash
 opencode --log-level DEBUG --print-logs 2>&1 | grep "my-plugin"
 ```
+
+For complete SDK reference, see [SDK Reference](./sdk-reference.md).
 
 ---
 
@@ -242,7 +252,54 @@ All events available via the `event` hook. Subscribe with `event: async ({ event
 
 ---
 
+## SDK Usage Patterns
+
+For the complete SDK reference, see [SDK Reference](./sdk-reference.md).
+
+### Context Injection Without LLM Response
+
+Inject content into a session without triggering the model:
+
+```ts
+await client.session.prompt({
+  path: { id: sessionID },
+  body: {
+    noReply: true,
+    parts: [{ type: "text", text: "System context here", ignored: true }],
+  },
+})
+```
+
+`ignored: true` keeps the content visible to the user but excludes it from future model context.
+
+### Session Metadata Lookup
+
+Get the current model and provider for a session:
+
+```ts
+const session = await client.session.get({ path: { id: sessionID } })
+const modelID = session.data?.modelID
+const providerID = session.data?.providerID
+const isSubagent = !!session.data?.parentID  // subagent sessions have parentID
+```
+
+### Toast Notifications
+
+```ts
+await client.tui.showToast({
+  body: {
+    message: "Task completed",
+    variant: "info",  // info | success | warning | error
+    duration: 9000,   // optional, milliseconds
+  },
+})
+```
+
+---
+
 ## SDK Client Reference
+
+This section provides a quick overview of the SDK. For complete API documentation, method signatures, and usage patterns, see [SDK Reference](./sdk-reference.md).
 
 Install: `npm install @opencode-ai/sdk`
 
@@ -409,6 +466,42 @@ OPENCODE_SERVER_PASSWORD=your-password opencode serve
 | POST | `/tui/show-toast` | Show toast |
 | GET | `/event` | SSE event stream |
 | GET | `/doc` | OpenAPI spec |
+
+---
+
+## TUI Plugin API Overview
+
+The TUI plugin receives an `api` object with these surfaces:
+
+| API | Purpose |
+|-----|---------|
+| `api.client` | SDK client (same as server plugin `client`) |
+| `api.ui.toast` | Show toast notifications |
+| `api.ui.Prompt` | Prompt input component wrapper |
+| `api.ui.dialog` | Dialog management (replace, setSize, clear) |
+| `api.slots.register` | Register slot renderers |
+| `api.event.on` | Subscribe to events |
+| `api.lifecycle.onDispose` | Register cleanup callbacks |
+| `api.theme.current` | Theme colors (text, textMuted, error, warning) |
+| `api.kv` | Key-value storage for plugin state |
+| `api.keymap` | Register slash commands (experimental) |
+
+For the complete TUI API reference, see [SDK Reference](./sdk-reference.md#tui-plugin-api-reference).
+
+### TUI Plugin Logging
+
+```ts
+// Use api.client for logging in TUI plugins
+await api.client?.app?.log?.({
+  body: {
+    service: "my-plugin-tui",
+    level: "info",
+    message: "TUI initialized",
+  },
+})
+```
+
+Always use optional chaining (`?.`) in TUI plugins as APIs may not be available in all contexts.
 
 ---
 
@@ -871,6 +964,26 @@ Notable projects:
 ### Community Agents
 
 Browse at [opencode.ai/docs/ecosystem#agents](https://opencode.ai/docs/ecosystem#agents)
+
+For a curated reference of ecosystem plugins, projects, and agents, see [Ecosystem Reference](./ecosystem-reference.md).
+
+---
+
+## Upstream References
+
+| Resource | URL |
+|----------|-----|
+| Official docs | https://opencode.ai/docs/ |
+| Plugin docs | https://opencode.ai/docs/plugins/ |
+| SDK docs | https://opencode.ai/docs/sdk/ |
+| Server docs | https://opencode.ai/docs/server/ |
+| Config docs | https://opencode.ai/docs/config/ |
+| Agents docs | https://opencode.ai/docs/agents/ |
+| Ecosystem | https://opencode.ai/docs/ecosystem/ |
+| Source code | https://github.com/anomalyco/opencode |
+| SDK source | https://github.com/anomalyco/opencode/tree/dev/packages/sdk |
+| Plugin package | https://github.com/anomalyco/opencode/tree/dev/packages/plugin |
+| Docs source | https://github.com/anomalyco/opencode/tree/dev/packages/web/src/content/docs |
 
 ---
 
