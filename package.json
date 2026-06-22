@@ -46,7 +46,9 @@
     "clean": "rm -rf dist",
     "dev:install": "node scripts/dev-install.mjs",
     "dev:uninstall": "node scripts/dev-uninstall.mjs",
-    "prepublishOnly": "pnpm run build:check && pnpm run build"
+    "prepublishOnly": "pnpm run build:check && pnpm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "peerDependencies": {
     "@opencode-ai/plugin": ">=0.1.0"
@@ -55,7 +57,8 @@
     "@opencode-ai/plugin": "latest",
     "@opencode-ai/sdk": "^1.17.8",
     "@types/node": "^22.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.9"
   },
   "dependencies": {
     "@opentui/core": "^0.3.4",
