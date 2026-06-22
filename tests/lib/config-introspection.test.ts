@@ -5,7 +5,7 @@ import {
   hasProvider,
   getPluginSpecFromEntry,
   dedupeStrings,
-} from "../src/lib/config-introspection";
+} from "@/lib/core/config-introspection";
 
 describe("dedupeStrings", () => {
   it("removes duplicates", () => {
@@ -64,10 +64,11 @@ describe("extractPluginSpecs", () => {
     expect(result).toContain("tui-plugin");
   });
 
-  it("includes qwen-code when companion plugins exist", () => {
+  it("does not implicitly inject plugins when companion plugins exist", () => {
     const config = { companionPlugins: ["some-plugin"] };
     const result = extractPluginSpecs(config);
-    expect(result).toContain("qwen-code");
+    expect(result).toContain("some-plugin");
+    expect(result).not.toContain("qwen-code");
   });
 
   it("deduplicates plugin specs", () => {
@@ -106,6 +107,20 @@ describe("extractProviderIds", () => {
     const result = extractProviderIds(config);
     const aCount = result.filter((s) => s === "a").length;
     expect(aCount).toBe(1);
+  });
+});
+
+describe("extractPluginSpecs — no implicit injection", () => {
+  it("does not inject qwen-code when companion key is present", () => {
+    const config = { companion: true, plugin: ["other-plugin"] };
+    const specs = extractPluginSpecs(config);
+    expect(specs).not.toContain("qwen-code");
+  });
+
+  it("does not inject any implicit plugins for companionPlugins", () => {
+    const config = { companionPlugins: ["some-plugin"] };
+    const specs = extractPluginSpecs(config);
+    expect(specs).toEqual(["some-plugin"]);
   });
 });
 

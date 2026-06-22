@@ -46,6 +46,7 @@ export interface DirsResult {
 export interface AuthPaths {
   authFilePath: string;
   configDirs: string[];
+  dataDirs: string[];
 }
 
 // ─── platform-specific getters ───────────────────────────────────────────────
@@ -232,8 +233,9 @@ function getAuthPaths(): AuthPaths {
   const dirs = getOpencodeRuntimeDirCandidates();
   return {
     configDirs: dirs.configDirs,
-    authFilePath: dirs.configDirs[0]
-      ? join(dirs.configDirs[0], "auth.json")
+    dataDirs: dirs.dataDirs,
+    authFilePath: dirs.dataDirs[0]
+      ? join(dirs.dataDirs[0], "auth.json")
       : "",
   };
 }

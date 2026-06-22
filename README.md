@@ -37,20 +37,18 @@ pnpm run build
 
 ### 4. Install in opencode
 
-**Server plugin** — add to `opencode.json`:
+**Server plugin** — set `OPENCODE_CONFIG_CONTENT` (no global config needed):
 
-```json
-{
-  "plugin": [
-    "/absolute/path/to/your-plugin/dist/index.js"
-  ]
-}
+```bash
+export OPENCODE_CONFIG_CONTENT='{"plugin":["./dist/index.js"]}'
 ```
 
-**TUI plugin** — add to `~/.config/opencode/tui.json`:
+Or copy `cp .env.local.example .env.local` and use direnv. The relative path `./dist/index.js` resolves from your workspace.
 
-```json
-["/absolute/path/to/your-plugin"]
+**TUI plugin** — global only, run `pnpm run dev:install` to add the workspace to `~/.config/opencode/tui.json`:
+
+```bash
+pnpm run dev:install
 ```
 
 ### 5. Restart opencode

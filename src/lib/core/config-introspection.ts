@@ -74,11 +74,6 @@ function extractPluginSpecs(config: unknown): string[] {
     }
   }
 
-  if (!specs.some((s) => s.includes("qwen-code"))) {
-    const hasCompanion = Boolean(obj.companion || obj.companionPlugins);
-    if (hasCompanion) specs.push("qwen-code");
-  }
-
   return dedupeStrings(specs);
 }
 

@@ -22,15 +22,21 @@ For the complete opencode plugin architecture reference, see `docs/instructions/
 import { TextAttributes } from "@opentui/core";
 import { Show, createSignal } from "solid-js";
 
+// api parameter is "any" — importing types from @opencode-ai/plugin/tui breaks loading
 const plugin = {
   id: "my-plugin-tui",
   tui: async (api: any, _options: any) => {
-    // signals, events, slot registration
+    // Plugin init — register slots, events, etc.
+    // api provides: slots, theme, event, kv, dialog, toast, Prompt component
   },
 };
 
 export default plugin;
 ```
+
+**TUI plugin loading:** Plugins are loaded by `pluginHost.start({ api })` during `Tui.run()` in opencode's source (`packages/tui/src/app.tsx`). The `api` is a structured `TuiApi` type but importing it from `@opencode-ai/plugin/tui` causes silent load failures. Use `api: any` instead.
+
+**Plugin path resolution:** TUI paths in `tui.json` are resolved relative to `~/.config/opencode/`. To load a TUI plugin from a workspace folder, add the absolute path to the workspace root (which contains `dist/tui.tsx`).
 
 ## Slot Registration
 
@@ -337,8 +343,9 @@ function CommandOutputDialog(props: { api: any; title: string; output: string })
 
 1. File must be `.tsx` extension
 2. Must have `/** @jsxImportSource @opentui/solid */` pragma
-3. Don't import from `@opencode-ai/plugin/tui`
+3. Don't import from `@opencode-ai/plugin/tui` — causes silent load failures
 4. Check `tsconfig.json` has `"jsx": "preserve"`
+5. TUI paths in `tui.json` are resolved relative to `~/.config/opencode/` — use absolute paths for workspace plugins
 
 ### JSX not rendering
 
@@ -353,3 +360,18 @@ Use `fs.readFileSync` instead of `api.client.file.read()`.
 ### `api.keymap.registerLayer` breaks loading
 
 The API may not exist in your opencode version. Guard with `if (!keymap?.registerLayer) return`.
+
+### Double-rendered prompt
+
+The `session_prompt` slot replaces the default prompt. If you see two prompts, you may be rendering `<api.ui.Prompt>` inside a component that also gets composed with the default. Ensure you're only rendering what you want — the `session_prompt` slot **is** the prompt. To add status below it, render `<api.ui.Prompt>` with all props forwarded.
+
+### TUI plugin path resolution
+
+Paths specified in `tui.json` are resolved relative to `~/.config/opencode/`. For workspace plugins, always use the **absolute path** to the workspace root:
+
+```bash
+# Get absolute path
+cd /path/to/workspace && pwd  # e.g., /Users/me/my-plugin
+# Then add to tui.json:
+[pwd]
+```

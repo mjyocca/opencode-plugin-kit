@@ -7,7 +7,7 @@ import {
   resolveEditableConfigPath,
   getEffectiveConfigRoot,
   resolveRuntimeContextRoots,
-} from "../src/lib/config-discovery";
+} from "@/lib/core/config-discovery";
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 
@@ -215,5 +215,28 @@ describe("resolveRuntimeContextRoots", () => {
     const result = resolveRuntimeContextRoots({ workspaceRoot: "/workspace" });
     expect(typeof result.configRoot).toBe("string");
     expect(result.configRoot.length).toBeGreaterThan(0);
+  });
+});
+
+describe("resolveRuntimeContextRoots — config param fix", () => {
+  it("applies configRoot from config when provided", () => {
+    const result = resolveRuntimeContextRoots({
+      workspaceRoot: "/workspace",
+      config: { configRoot: "/custom/config/root" },
+    });
+    expect(result.configRoot).toBe("/custom/config/root");
+  });
+
+  it("defaults to cwd when config has no configRoot", () => {
+    const result = resolveRuntimeContextRoots({
+      workspaceRoot: "/workspace",
+      config: { plugin: [] },
+    });
+    expect(result.configRoot).toBe(process.cwd());
+  });
+
+  it("defaults to cwd when config is omitted", () => {
+    const result = resolveRuntimeContextRoots({ workspaceRoot: "/workspace" });
+    expect(result.configRoot).toBe(process.cwd());
   });
 });

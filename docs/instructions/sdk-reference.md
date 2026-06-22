@@ -1172,6 +1172,21 @@ if (await isSubagentSession(sessionID)) {
 
 ---
 
+## TUI Plugin Runtime
+
+The TUI plugin system loads plugins through a `TuiPluginHost` interface in `packages/tui/src/plugin/runtime.ts`. Each plugin receives:
+
+- **api**: The TUI API object (created from `createTuiApi(createTuiApiAdapters({...}))`)
+- **config**: Resolved TUI config (theme, keybinds, scroll, etc.)
+- **runtime**: Plugin runtime with routes, slots, and registration
+- **dispose**: Callback to clean up plugin resources
+
+The TUI app loads plugins from `~/.config/opencode/tui.json`'s `plugin` array. Each entry is either a path string or a tuple `[path, options]`.
+
+The TUI API surfaces match the server's `client` object for most operations but also includes TUI-specific APIs like `api.slots.register`, `api.ui.Prompt`, `api.ui.dialog`, etc.
+
+See [TUI Plugin Architecture](./opencode-plugin-architecture.md#tui-plugin-architecture) for the complete TUI API.
+
 ## TUI Plugin API Reference
 
 The `api` object passed to TUI plugins. See [TUI Plugin Architecture](./opencode-plugin-architecture.md#tui-plugin-architecture) for the full structure.
@@ -1489,6 +1504,54 @@ All types are available from the SDK packages.
 See the generated types in your `node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts` for the complete type definitions.
 
 ---
+
+## TUI Plugin Host
+
+TUI plugins are loaded via `pluginHost.start()` called from `Tui.run()` in `packages/tui/src/app.tsx`:
+
+```ts
+pluginHost.start({
+  api: TuiApi,       // TUI API — slots, theme, event, kv, dialogs, etc.
+  config: TuiConfig.Resolved,  // Resolved TUI config
+  runtime: PluginRuntime,      // Runtime state (routes, slots, etc.)
+  dispose: () => void, // Cleanup callback
+})
+```
+
+**Plugin path resolution:** TUI plugin paths in `tui.json` are resolved relative to `~/.config/opencode/`. For workspace paths, use the **absolute path** to the workspace root (which contains `dist/tui.tsx`).
+
+### TUI Config Schema
+
+TUI config at `~/.config/opencode/tui.json` supports:
+
+```typescript
+type PluginSpec = string | [string, Record<string, unknown>]
+
+interface TuiConfig {
+  $schema?: "https://opencode.ai/tui.json"
+  theme?: string
+  keybinds?: Record<string, string>
+  plugin?: PluginSpec[]
+  plugin_enabled?: Record<string, boolean>
+  leader_timeout?: number
+  attention?: {
+    enabled: boolean
+    notifications: boolean
+    sound: boolean
+    volume: number
+    sound_pack: string
+    sounds: Record<string, string>
+  }
+  prompt?: {
+    max_height?: number
+    max_width?: number | "auto"
+  }
+  scroll_speed?: number
+  scroll_acceleration?: { enabled: boolean }
+  diff_style?: "auto" | "stacked"
+  mouse?: boolean
+}
+```
 
 ## Upstream References
 

@@ -5,7 +5,7 @@ import {
   getAuthPaths,
   expandTilde,
   clearRuntimeCaches,
-} from "../src/lib/runtime-paths";
+} from "@/lib/core/runtime-paths";
 
 let savedEnv: Record<string, string | undefined>;
 
@@ -218,8 +218,35 @@ describe("getAuthPaths", () => {
   it('authFilePath contains "opencode" when available', () => {
     clearRuntimeCaches();
     const paths = getAuthPaths();
-    if (paths.configDirs.length > 0) {
+    if (paths.dataDirs.length > 0) {
       expect(paths.authFilePath).toContain("opencode");
+    }
+  });
+});
+
+describe("getAuthPaths — data dir fix", () => {
+  it("authFilePath resolves to dataDirs[0], not configDirs[0] (Linux XDG)", () => {
+    if (process.platform === "darwin" || process.platform === "win32") return;
+    process.env.XDG_DATA_HOME = "/xdg/data";
+    process.env.XDG_CONFIG_HOME = "/xdg/config";
+    clearRuntimeCaches();
+    const paths = getAuthPaths();
+    expect(paths.authFilePath).toContain("/xdg/data");
+    expect(paths.authFilePath).not.toContain("/xdg/config");
+  });
+
+  it("dataDirs field is populated", () => {
+    clearRuntimeCaches();
+    const paths = getAuthPaths();
+    expect(Array.isArray(paths.dataDirs)).toBe(true);
+    expect(paths.dataDirs.length).toBeGreaterThan(0);
+  });
+
+  it("authFilePath is under dataDirs[0]", () => {
+    clearRuntimeCaches();
+    const paths = getAuthPaths();
+    if (paths.dataDirs[0]) {
+      expect(paths.authFilePath.startsWith(paths.dataDirs[0])).toBe(true);
     }
   });
 });

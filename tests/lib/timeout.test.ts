@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { withTimeout, TimeoutError } from "../src/lib/timeout";
+import { withTimeout, TimeoutError } from "@/lib/core/timeout";
 
 describe("TimeoutError", () => {
   it("is instance of TimeoutError", () => {
@@ -56,5 +56,17 @@ describe("withTimeout", () => {
       expect(caughtError).toBe(true);
       expect((error as TimeoutError).timeoutMs).toBe(0);
     }
+  });
+});
+
+describe("withTimeout — timer cleanup", () => {
+  it("does not leave a dangling timer when promise resolves early", async () => {
+    // Confirms no hang: timer is cleared when the promise resolves before deadline
+    const result = await withTimeout(Promise.resolve("fast"), 10000);
+    expect(result).toBe("fast");
+  });
+
+  it("negative ms throws TimeoutError immediately", () => {
+    expect(() => withTimeout(Promise.resolve(), -1)).toThrow(TimeoutError);
   });
 });

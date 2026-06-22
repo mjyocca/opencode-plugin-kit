@@ -6,13 +6,13 @@ import type {
   TuiPluginModule,
 } from "@opencode-ai/plugin/tui";
 import { createSignal } from "solid-js";
-import { PLUGIN_ID } from "./lib/constants.js";
-import { createLogger } from "./lib/logger.js";
+import { PLUGIN_ID } from "@/lib/core/constants";
+import { createLogger } from "@/lib/core/logger";
 import {
   HomeBottomView,
   SidebarPanelView,
   SessionPromptAugmentedView,
-} from "./tui/index.js";
+} from "@/tui/index.js";
 
 const SIDEBAR_ORDER = 300;
 const COMPACT_ORDER = 90;
@@ -26,7 +26,7 @@ function todayMonth(): string {
 const tui: TuiPlugin = async (api, _options) => {
   const logger = createLogger(PLUGIN_ID);
 
-  logger.info("TUI plugin initializing");
+  // logger.info("TUI plugin initializing");
 
   const [statusText, setStatusText] = createSignal("Initializing...");
   const [compactText, setCompactText] = createSignal("");
@@ -43,7 +43,7 @@ const tui: TuiPlugin = async (api, _options) => {
     refreshStatus();
   });
 
-  logger.info("TUI plugin initialized — slots registered");
+  // logger.info("TUI plugin initialized — slots registered");
 
   // Sidebar panel in the left sidebar
   api.slots.register({
