@@ -3,7 +3,7 @@ import {
   stripJsonc,
   parseJsonOrJsonc,
   parseJsonOrJsoncWithPath,
-} from "../src/lib/jsonc";
+} from "@/lib/core/jsonc";
 
 describe("stripJsonc", () => {
   it("single-line comments", () => {

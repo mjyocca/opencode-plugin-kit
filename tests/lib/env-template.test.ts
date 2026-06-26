@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { resolveEnvTemplate } from "../src/lib/env-template";
+import { resolveEnvTemplate } from "@/lib/core/env-template";
+import type { AllowedEnv } from "@/lib/core/env-template";
 
 let savedEnv: Record<string, string | undefined>;
 
@@ -45,5 +46,27 @@ describe("resolveEnvTemplate", () => {
   it("returns null when env var allowlist is not present", () => {
     process.env.TEST_KEY = "test-value";
     expect(resolveEnvTemplate("{env:TEST_KEY}")).toBe("test-value");
+  });
+});
+
+describe("resolveEnvTemplate — AllowedEnv object allowlist", () => {
+  it("allows var present in AllowedEnv object array", () => {
+    process.env.TEST_ALLOWED_VAR = "hello";
+    const allowed: AllowedEnv[] = [{ name: "TEST_ALLOWED_VAR", category: "test" }];
+    const result = resolveEnvTemplate("{env:TEST_ALLOWED_VAR}", allowed);
+    expect(result).toBe("hello");
+  });
+
+  it("blocks var not in AllowedEnv object array", () => {
+    process.env.TEST_BLOCKED_VAR = "secret";
+    const allowed: AllowedEnv[] = [{ name: "OTHER_VAR", category: "test" }];
+    const result = resolveEnvTemplate("{env:TEST_BLOCKED_VAR}", allowed);
+    expect(result).toBeNull();
+  });
+
+  it("resolves when allowed list is null (no restriction)", () => {
+    process.env.TEST_FREE_VAR = "free";
+    const result = resolveEnvTemplate("{env:TEST_FREE_VAR}", null);
+    expect(result).toBe("free");
   });
 });

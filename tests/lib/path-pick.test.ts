@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { pickFirstExisting } from "../src/lib/path-pick";
+import { pickFirstExisting } from "@/lib/core/path-pick";
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 
@@ -41,5 +41,32 @@ describe("pickFirstExisting", () => {
 
   it("handles null/undefined array", () => {
     expect(pickFirstExisting([])).toBeUndefined();
+  });
+});
+
+describe("pickFirstExisting — onChecked callback", () => {
+  it("calls onChecked for each candidate with correct args", () => {
+    const calls: Array<{ path: string; exists: boolean; index: number }> = [];
+    pickFirstExisting(["/nonexistent/a", "/nonexistent/b"], {
+      onChecked: (path, exists, index) => calls.push({ path, exists, index }),
+    });
+    expect(calls).toHaveLength(2);
+    expect(calls[0].index).toBe(0);
+    expect(calls[1].index).toBe(1);
+    expect(calls.every((c) => !c.exists)).toBe(true);
+  });
+
+  it("stops calling onChecked after first existing path", () => {
+    mkdirSync(tmpDir, { recursive: true });
+    const existingFile = join(tmpDir, "exists.json");
+    writeFileSync(existingFile, "{}");
+    const after = join(tmpDir, "after.json");
+
+    const calls: string[] = [];
+    pickFirstExisting([existingFile, after], {
+      onChecked: (path) => calls.push(path),
+    });
+    // Only the first (existing) path should be checked
+    expect(calls).toHaveLength(1);
   });
 });

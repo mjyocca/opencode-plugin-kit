@@ -142,10 +142,16 @@ export const MyPlugin: Plugin = async ({ client }) => {
 }
 ```
 
-**TUI fallback:** In TUI plugins where `client` may not be available, use `process.stderr.write`:
+**TUI logging:** In TUI plugins, use SDK logging exclusively — no stderr fallback to avoid UI pollution:
 
 ```ts
-process.stderr.write("[my-plugin-tui] message\n")
+await api.client?.app?.log?.({
+  body: {
+    service: "my-plugin-tui",
+    level: "info",
+    message: "TUI message",
+  },
+})
 ```
 
 Filter logs:
@@ -378,13 +384,43 @@ export default plugin
 
 ### Available Slots
 
-| Slot | Visibility |
-|------|------------|
-| `sidebar_content` | Inside active sessions only |
-| `home_bottom` | Home screen |
-| `home_footer` | Home screen |
-| `session_prompt` | Below chat input |
-| `app_bottom` | Always visible |
+| Slot | Visibility | Slot Context |
+|------|----------|--------------|
+| `sidebar_content` | Inside active sessions only | `ctx: any, props: { session_id?: string }` |
+| `home_bottom` | Home screen | `ctx: any, props: {}` |
+| `home_footer` | Home screen | `ctx: any, props: {}` |
+| `session_prompt` | Below chat input | `ctx: any, props: { session_id?: string, ref?: (ref: any) => void, disabled?: boolean, visible?: boolean, on_submit?: () => void }` |
+| `app_bottom` | Always visible | `ctx: any, props: {}` |
+
+**Props for `session_prompt`:**
+- `session_id` — current session ID (optional, only for session-scoped slots)
+- `ref` — passed to the built-in `<Prompt>` component for forwarding
+- `disabled` — whether the prompt is disabled
+- `visible` — whether the prompt is visible
+- `on_submit` — callback when the user submits the prompt
+
+The `session_prompt` slot **wraps/replaces** the default prompt component. If you register a `session_prompt` slot, you must render `<api.ui.Prompt>` for the prompt to function. Failure to forward the `ref` prop will break prompt functionality.
+
+To add to (not replace) the prompt UI, render `<api.ui.Prompt>` with all props forwarded:
+
+```tsx
+function SessionPromptWithStatus(ctx: any, props: { session_id: string; ref?: any }) {
+  return (
+    <box gap={0}>
+      <props.api.ui.Prompt
+        sessionID={props.session_id}
+        disabled={props.disabled}
+        visible={props.visible}
+        on_submit={props.on_submit}
+        ref={props.ref}
+      />
+      <text fg={ctx.theme.current.textMuted}>Session: {props.session_id.slice(0, 8)}...</text>
+    </box>
+  )
+}
+```
+
+**To remove a `session_prompt` slot:** Unregister it by calling `api.slots.unregister()` with the slot name, or remove the registration from `tui.json` (set `"enabled": false`).
 
 ### JSX Components
 
@@ -606,7 +642,9 @@ Both `.json` and `.jsonc` (JSON with comments) are supported.
 
 ### TUI Config
 
-Separate file: `tui.json` or `tui.jsonc`
+File location: `~/.config/opencode/tui.json` or `tui.jsonc` (global only — no local equivalent, no env var workaround).
+
+Schema reference: `packages/tui/src/config/index.tsx` on [anomalyco/opencode:dev](https://github.com/anomalyco/opencode/blob/dev/packages/tui/src/config/index.tsx).
 
 ```json
 {
@@ -616,14 +654,63 @@ Separate file: `tui.json` or `tui.jsonc`
   "scroll_speed": 3,
   "diff_style": "auto",
   "mouse": true,
-  "attention": {
-    "enabled": true,
-    "notifications": true,
-    "sound": true,
-    "volume": 0.4
+  "plugin": [
+    // String (simple)
+    "./path/to/plugin.tsx",
+    "npm-package-name",
+    // Tuple with options
+    ["./plugins/my-plugin.tsx", { "enabled": false, "label": "workspace" }]
+  ],
+  "plugin_enabled": {
+    "my-plugin": true
   }
 }
 ```
+
+**plugin field format:**
+| Format | Example | Purpose |
+|--------|---------|---------|
+| String | `"./plugins/my-plugin.tsx"` | Simple path or npm package name |
+| Tuple | `["./plugins/my-plugin.tsx", { "enabled": false, "label": "workspace" }]` | Path with options |
+
+`PluginSpec = Schema.Union([Schema.String, Tuple([String, Record(String, Unknown)])])`
+
+Options can include `enabled` (boolean) and `label` (string). Opencode resolves the path relative to `~/.config/opencode/` — not relative to your workspace.
+
+**Note:** TUI plugins are `.tsx` files (not compiled). The runtime searches for `dist/tui.tsx` inside the specified folder path. To load a workspace TUI plugin, add the **absolute path to the workspace root** (which contains `dist/tui.tsx`).
+
+---
+
+### TUI Plugin Host
+
+TUI plugins are loaded by `pluginHost.start()` called during `Tui.run()` in `packages/tui/src/app.tsx`. Each plugin receives an `api` object created from `createTuiApi(createTuiApiAdapters({...}))`:
+
+```ts
+pluginHost.start({
+  api,           // TuiApi — slots, theme, events, dialogs, toast, etc.
+  config,        // TuiConfig.Resolved — resolved config
+  runtime,       // PluginRuntime — routes, slots, etc.
+  dispose,       // () => void — cleanup handler
+})
+```
+
+The `api` object is **not** `any` — it is a structured `TuiApi` type. However, importing types from `@opencode-ai/plugin/tui` is deprecated and causes silent load failures. The recommended pattern is:
+
+```ts
+/** @jsxImportSource @opentui/solid */
+
+const plugin = {
+  id: "my-plugin-tui",
+  tui: async (api: any, _options: any) => {
+    // api type omitted intentionally — use at your own risk
+    // See docs/instructions/opencode-plugin-architecture.md for API surfaces
+  },
+}
+
+export default plugin
+```
+
+The plugin is loaded from `dist/tui.tsx` when the runtime resolves the workspace path specified in `tui.json`.
 
 ---
 
@@ -822,7 +909,7 @@ See [Ecosystem Reference](./ecosystem-reference.md) for additional curated resou
 1. Check file extension (`.js` or `.ts` for server, `.tsx` for TUI)
 2. Verify exports — must export a function (not a plain object)
 3. Don't import from `@opencode-ai/plugin/tui` — causes silent failures
-4. Check opencode logs: `DEBUG_MY_PLUGIN=1 opencode`
+4. Check opencode logs: `export OPENCODE_LOG_LEVEL=DEBUG && opencode`
 
 ### TUI Plugin Issues
 
@@ -849,10 +936,12 @@ See [Ecosystem Reference](./ecosystem-reference.md) for additional curated resou
 
 ```bash
 # Server plugin
-DEBUG_MY_PLUGIN=1 opencode
+export OPENCODE_LOG_LEVEL=DEBUG opencode
 
-# TUI plugin
-process.stderr.write("[my-plugin-tui] message\n")
+# TUI plugin (SDK only, no stderr)
+await api.client?.app?.log?.({
+  body: { service: "my-plugin-tui", level: "info", message: "TUI message" },
+})
 
 # Filter all logs
 opencode --log-level DEBUG --print-logs 2>&1 | grep "my-plugin"
@@ -869,4 +958,4 @@ Use `fs.readFileSync` instead of `api.client.file.read()` — the API is sandbox
 | `api.keymap.registerLayer` breaks loading | Guard with `if (!keymap?.registerLayer) return` |
 | Toast notifications not showing | Use `.catch(() => {})` — they're non-blocking |
 | `session_id` undefined in slot props | Make it optional — non-session slots don't provide it |
-| Plugin logs not visible | Use `process.stderr.write`, not `console.log` |
+| Plugin logs not visible | Use `api.client.app.log()`, not `process.stderr.write` or `console.log` |

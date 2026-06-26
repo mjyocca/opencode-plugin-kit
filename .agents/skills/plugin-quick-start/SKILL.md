@@ -378,7 +378,7 @@ See **[`solidjs-tui`](../solidjs-tui/SKILL.md)** for complete SolidJS patterns t
 import { createSdkLogger } from "./lib/logger.js"
 
 export const MyPlugin: Plugin = async ({ client }) => {
-  const log = createSdkLogger(client, "my-plugin", "DEBUG_MY_PLUGIN")
+  const log = createSdkLogger(client, "my-plugin")
   
   await log.info("Plugin initialized")
   
@@ -394,7 +394,6 @@ export const MyPlugin: Plugin = async ({ client }) => {
 
 ```tsx
 const tui: TuiPlugin = async (api: any, _options: any) => {
-  // Prefer SDK if available
   await api.client?.app?.log?.({
     body: {
       service: "my-plugin-tui",
@@ -402,13 +401,10 @@ const tui: TuiPlugin = async (api: any, _options: any) => {
       message: "TUI initialized",
     },
   })
-  
-  // Fallback to stderr
-  if (!api.client?.app?.log) {
-    process.stderr.write("[my-plugin-tui] TUI initialized\n")
-  }
 }
 ```
+
+> **Note:** TUI plugins use SDK logging only — no stderr fallback. Stderr output pollutes the terminal UI.
 
 See [plugin-logging](../plugin-logging/SKILL.md) for complete patterns.
 

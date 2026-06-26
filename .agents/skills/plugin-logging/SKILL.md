@@ -1,6 +1,6 @@
 ---
 name: plugin-logging
-description: Logging patterns for opencode plugins — SDK structured logging, TUI fallback, debug modes, and filter commands. Use when implementing logging in server or TUI plugins.
+description: Logging patterns for opencode plugins — SDK structured logging, TUI SDK only (no stderr), debug modes, and filter commands. Use when implementing logging in server or TUI plugins.
 ---
 
 # Plugin Logging Patterns
@@ -97,16 +97,15 @@ export interface Logger {
 export function createSdkLogger(
   client: Client,
   pluginId: string,
-  debugEnvVar?: string,
 ): Logger {
-  const DEBUG = debugEnvVar ? process.env[debugEnvVar] === "1" : false
+  const DEBUG = process.env.OPENCODE_LOG_LEVEL == "DEBUG" ? true : false
 
   const log = async (
     level: LogLevel,
     msg: string,
     extra?: LogMetadata,
   ): Promise<void> => {
-    // Filter debug logs unless explicitly enabled
+    // Filter debug logs unless OPENCODE_LOG_LEVEL=DEBUG
     if (level === "debug" && !DEBUG) return
 
     await client.app.log({
@@ -129,7 +128,7 @@ export function createSdkLogger(
 
 // Usage:
 export const MyPlugin: Plugin = async ({ client }) => {
-  const log = createSdkLogger(client, "my-plugin", "DEBUG_MY_PLUGIN")
+  const log = createSdkLogger(client, "my-plugin")
   
   await log.info("Plugin initialized", { project, directory })
   
@@ -143,15 +142,18 @@ export const MyPlugin: Plugin = async ({ client }) => {
 
 ---
 
-## TUI Plugin Logging (SDK Fallback)
+## TUI Plugin Logging (SDK Only — No stderr)
 
-**Prefer SDK logging with fallback to stderr:**
+**Use SDK logging exclusively in TUI plugins — no stderr fallback.**
+
+TUI plugins should use `api.client?.app?.log?.()` with optional chaining.
+Stderr output in TUI plugins pollutes the terminal UI, so there is no stderr fallback.
 
 ```ts
 /** @jsxImportSource @opentui/solid */
 
 const tui: TuiPlugin = async (api: any, _options: any) => {
-  // Prefer SDK if available
+  // SDK logging only — silently discards if client not available
   await api.client?.app?.log?.({
     body: {
       service: "my-plugin-tui",
@@ -160,75 +162,42 @@ const tui: TuiPlugin = async (api: any, _options: any) => {
       extra: { someData: "value" },
     },
   })
-  
-  // Fallback to stderr if SDK client not available
-  if (!api.client?.app?.log) {
-    process.stderr.write("[my-plugin-tui] TUI initialized\n")
-  }
 }
 ```
 
 **TUI Logger Helper:**
 
 ```ts
-function createTuiLogger(api: any, pluginId: string) {
-  return {
-    info: (msg: string) => {
-      if (api.client?.app?.log) {
-        void api.client.app.log({
-          body: { service: pluginId, level: "info", message: msg },
-        })
-      } else {
-        process.stderr.write(`[${pluginId}] ${msg}\n`)
-      }
-    },
-    warn: (msg: string) => {
-      if (api.client?.app?.log) {
-        void api.client.app.log({
-          body: { service: pluginId, level: "warn", message: msg },
-        })
-      } else {
-        process.stderr.write(`[${pluginId}] WARN: ${msg}\n`)
-      }
-    },
-    error: (msg: string) => {
-      if (api.client?.app?.log) {
-        void api.client.app.log({
-          body: { service: pluginId, level: "error", message: msg },
-        })
-      } else {
-        process.stderr.write(`[${pluginId}] ERROR: ${msg}\n`)
-      }
-    },
-  }
-}
+import { createTuiLogger } from "../lib/core/logger"
 
-// Usage:
 const tui: TuiPlugin = async (api: any, _options: any) => {
   const log = createTuiLogger(api, "my-plugin-tui")
-  
+
   log.info("TUI initialized")
-  
+
   api.lifecycle.onDispose(() => {
     log.info("TUI disposing")
   })
 }
 ```
 
+> **Why no stderr fallback?** Writing to `process.stderr` in a TUI plugin causes output to appear in the terminal UI, which is distracting and noisy. The SDK logger silently discards messages when the client is unavailable, which is the correct behavior for TUI plugins.
+
 ---
 
-## Debug Logging with Environment Variables
+## Debug Logging
+
+Debug logs are controlled by `OPENCODE_LOG_LEVEL=DEBUG`:
 
 ```ts
 export function createSdkLogger(
   client: Client,
   pluginId: string,
-  debugEnvVar?: string,
 ): Logger {
-  const DEBUG = debugEnvVar ? process.env[debugEnvVar] === "1" : false
+  const DEBUG = process.env.OPENCODE_LOG_LEVEL == "DEBUG" ? true : false
 
   const log = async (level: LogLevel, msg: string, extra?: LogMetadata) => {
-    // Filter debug logs unless explicitly enabled
+    // Filter debug logs unless OPENCODE_LOG_LEVEL=DEBUG
     if (level === "debug" && !DEBUG) return
 
     await client.app.log({
@@ -248,7 +217,14 @@ export function createSdkLogger(
 **Enable debug mode:**
 
 ```bash
-DEBUG_MY_PLUGIN=1 opencode
+export OPENCODE_LOG_LEVEL=DEBUG
+opencode
+```
+
+Or use the helper script:
+
+```bash
+pnpm run debug
 ```
 
 ---
@@ -298,9 +274,9 @@ await log.info(`Session created: ${session.id}, model: ${session.modelID}`)
 ### 2. Filter Debug Logs
 
 ```ts
-const DEBUG = process.env.DEBUG_MY_PLUGIN === "1"
+const DEBUG = process.env.OPENCODE_LOG_LEVEL == "DEBUG"
 
-// Only log debug messages when explicitly enabled
+// Only log debug messages when enabled via OPENCODE_LOG_LEVEL=DEBUG
 if (DEBUG || level !== "debug") {
   await client.app.log({ body: { service, level, message, extra } })
 }
@@ -359,9 +335,8 @@ export interface Logger {
 export function createSdkLogger(
   client: Client,
   pluginId: string,
-  debugEnvVar?: string,
 ): Logger {
-  const DEBUG = debugEnvVar ? process.env[debugEnvVar] === "1" : false
+  const DEBUG = process.env.OPENCODE_LOG_LEVEL == "DEBUG" ? true : false
 
   const log = async (
     level: LogLevel,
@@ -388,18 +363,36 @@ export function createSdkLogger(
   }
 }
 
-export function createLogger(pluginId: string, debugEnvVar?: string): Omit<Logger, "info" | "warn" | "error" | "debug"> & {
-  info: (msg: string) => void
-  warn: (msg: string) => void
-  error: (msg: string) => void
-  debug: (msg: string) => void
+export function createTuiLogger(
+  api: TuiPluginApi,
+  pluginId: string,
+): Omit<Logger, "info" | "warn" | "error" | "debug"> & {
+  info: (msg: string, extra?: Record<string, unknown>) => void
+  warn: (msg: string, extra?: Record<string, unknown>) => void
+  error: (msg: string, extra?: Record<string, unknown>) => void
+  debug: (msg: string, extra?: Record<string, unknown>) => void
 } {
-  const DEBUG = debugEnvVar ? process.env[debugEnvVar] === "1" : false
+  const DEBUG = process.env.OPENCODE_LOG_LEVEL == "DEBUG" ? true : false
+
+  const log = (
+    level: LogLevel,
+    msg: string,
+    extra?: Record<string, unknown>,
+  ) => {
+    if (level === "debug" && !DEBUG) return
+    void api.client.app.log({
+      service: pluginId,
+      level,
+      message: msg,
+      extra,
+    })
+  }
+
   return {
-    info:  (msg: string) => { process.stderr.write(`[${pluginId}] ${msg}\n`) },
-    warn:  (msg: string) => { process.stderr.write(`[${pluginId}] WARN: ${msg}\n`) },
-    error: (msg: string) => { process.stderr.write(`[${pluginId}] ERROR: ${msg}\n`) },
-    debug: (msg: string) => { if (DEBUG) process.stderr.write(`[${pluginId}] DEBUG: ${msg}\n`) },
+    info:  (msg, extra) => log("info", msg, extra),
+    warn:  (msg, extra) => log("warn", msg, extra),
+    error: (msg, extra) => log("error", msg, extra),
+    debug: (msg, extra) => log("debug", msg, extra),
   }
 }
 ```

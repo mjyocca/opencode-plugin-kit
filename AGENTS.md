@@ -17,16 +17,20 @@ A **starter kit** for building opencode plugins with **server** (SDK hooks, tool
 ## Quick Start
 
 ```bash
-# 1. Install dependencies
+# 1. Set config
+cp .env.local.example .env.local
+# Or manually: export OPENCODE_CONFIG_CONTENT='{"plugin":["./dist/index.js"]}'
+
+# 2. Install dependencies
 pnpm install
 
-# 2. Build
+# 3. Build
 pnpm run build
 
-# 3. Type-check without emitting
+# 4. Type-check without emitting
 pnpm run build:check
 
-# 4. Watch mode during development
+# 5. Watch mode during development
 pnpm run dev
 ```
 
@@ -75,21 +79,19 @@ your-plugin-name/
 
 ## Installing in opencode
 
-### As a local plugin
+### Local config (recommended)
 
-Add to your `opencode.json`:
+Use `OPENCODE_CONFIG_CONTENT` to inject the plugin entry without touching global config:
 
-```json
-{
-  "plugin": [
-    "/absolute/path/to/your-plugin/dist/index.js"
-  ]
-}
+```bash
+export OPENCODE_CONFIG_CONTENT='{"plugin":["./dist/index.js"]}'
 ```
 
-### As a TUI plugin
+You can set this in your .envrc or .env.local. The server plugin uses a **relative path** (`./dist/index.js`) so it resolves correctly from any workspace location.
 
-Add to `~/.config/opencode/tui.json`:
+### TUI plugin (global only)
+
+TUI config has no local equivalent — run `pnpm run dev:install` to add the workspace to `~/.config/opencode/tui.json`, or manually edit:
 
 ```json
 ["/absolute/path/to/your-plugin"]
@@ -137,9 +139,8 @@ await client.app.log({
 })
 ```
 
-TUI plugin — use SDK fallback or stderr:
+TUI plugin — use SDK logger (no stderr fallback to avoid UI pollution):
 ```ts
-// Prefer SDK if available
 await api.client?.app?.log?.({
   body: {
     service: "your-plugin-tui",
@@ -147,9 +148,6 @@ await api.client?.app?.log?.({
     message: "TUI initialized",
   },
 })
-
-// Fallback to stderr
-process.stderr.write("[your-plugin-tui] TUI initialized\n")
 ```
 
 Filter logs:
@@ -157,7 +155,7 @@ Filter logs:
 opencode --log-level DEBUG --print-logs 2>&1 | grep "your-plugin"
 ```
 
-See [plugin-logging](./.agents/skills/plugin-logging/SKILL.md) for complete patterns.
+See [plugin-logging](./.agents/skills/plugin-logging/SKILL.md) for complete patterns. Note: TUI plugins use the SDK logger with no stderr fallback.
 
 ---
 

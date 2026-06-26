@@ -7,9 +7,9 @@
 
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { getOpencodeRuntimeDirCandidates } from "./runtime-paths.js";
-import { parseJsonOrJsoncWithPath } from "./jsonc.js";
-import type { ParseResult } from "./jsonc.js";
+import { getOpencodeRuntimeDirCandidates } from "./runtime-paths";
+import { parseJsonOrJsoncWithPath } from "./jsonc";
+import type { ParseResult } from "./jsonc";
 
 export interface ConfigFileCandidate {
   path: string;
@@ -64,8 +64,6 @@ function getOpencodeGlobalConfigPaths(): ConfigFileCandidate[] {
 function readOpencodeConfig(candidate: ConfigFileCandidate): ParseResult {
   try {
     const content = readFileSync(candidate.path, "utf-8");
-    const isJsonc =
-      candidate.path.endsWith(".jsonc") || candidate.path.endsWith(".json5");
     return parseJsonOrJsoncWithPath(content, candidate.path);
   } catch {
     return {
@@ -128,12 +126,15 @@ interface ContextRoots {
 function resolveRuntimeContextRoots(params: {
   workspaceRoot?: string;
   fallbackDirectory?: string;
+  config?: unknown;
 }): ContextRoots {
   const workspaceRoot =
     params.workspaceRoot ?? params.fallbackDirectory ?? process.cwd();
   return {
     workspaceRoot: resolve(workspaceRoot),
-    configRoot: resolve(getEffectiveConfigRoot({}) ?? process.cwd()),
+    configRoot: resolve(
+      getEffectiveConfigRoot(params.config ?? {}) ?? process.cwd(),
+    ),
   };
 }
 
