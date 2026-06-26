@@ -37,3 +37,5 @@ opencode.jsonc
 
 # Template authorship
 .opencode-kit/
+
+opencode-*.log

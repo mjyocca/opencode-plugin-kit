@@ -46,6 +46,8 @@
     "clean": "rm -rf dist",
     "dev:install": "node scripts/dev-tui-install.mjs",
     "dev:uninstall": "node scripts/dev-tui-uninstall.mjs",
+    "debug": "./scripts/debug.sh",
+    "debug:tail": "tail -f opencode-debug.log",
     "prepublishOnly": "pnpm run build:check && pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest"

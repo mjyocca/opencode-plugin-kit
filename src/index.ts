@@ -10,10 +10,10 @@ import { eventHandler } from "./event-handler.js";
 
 export const PluginServer: Plugin = async (
   ctx: PluginInput,
-  options?: PluginOptions,
+  _options?: PluginOptions,
 ) => {
   const { client, project, directory } = ctx;
-  const logger = createSdkLogger(client, PLUGIN_ID, "DEBUG_PLUGIN_TUI");
+  const logger = createSdkLogger(client, PLUGIN_ID);
 
   // Register adapters — add additional adapters here as the plugin grows.
   // AdapterRegistry routes auth.loader and chat.params hooks to the right adapter.
