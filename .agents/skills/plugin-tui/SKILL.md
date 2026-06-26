@@ -203,7 +203,9 @@ if (existsSync(path)) {
 
 ## Debug Logging
 
-**Prefer SDK logging with fallback to stderr:**
+**Use SDK logging exclusively — no stderr fallback.**
+
+Stderr output in TUI plugins pollutes the terminal UI, so there is no stderr fallback.
 
 ```ts
 // TUI plugins use api.client with optional chaining
@@ -215,10 +217,17 @@ await api.client?.app?.log?.({
     extra: { someData: "value" },
   },
 })
+```
 
-// Fallback to stderr if SDK client not available
-if (!api.client?.app?.log) {
-  process.stderr.write("[my-plugin-tui] TUI initialized\n")
+Or use the provided helper:
+
+```ts
+import { createTuiLogger } from "../lib/core/logger"
+
+const tui: TuiPlugin = async (api, _options) => {
+  const log = createTuiLogger(api, "my-plugin-tui")
+  log.info("TUI initialized")
+  log.debug("Debug message (filtered unless OPENCODE_LOG_LEVEL=DEBUG)")
 }
 ```
 

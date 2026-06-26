@@ -133,7 +133,7 @@ await client.app.log({
 **Response:** `boolean`
 
 **Usage notes:**
-- Use this instead of `console.log` or `process.stderr.write` in server plugins
+- Use this instead of `console.log` in server plugins
 - In TUI plugins, use `api.client?.app?.log?.()` (same signature)
 - Logs are written to the server log stream
 - Filter logs: `opencode --log-level DEBUG --print-logs 2>&1 | grep "my-plugin"`

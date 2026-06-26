@@ -414,7 +414,7 @@ const PluginContext = createContext<{ logger: Logger }>();
 
 // Provide at root
 function RootComponent(props: { api: any }) {
-  const logger = createLogger("my-plugin");
+  const logger = createTuiLogger(api, "my-plugin");
   
   return (
     <PluginContext.Provider value={{ logger }}>
@@ -918,7 +918,7 @@ This skill covers the **primitives** (signals, effects, resources, control flows
 → **`plugin-config-patterns`** — Config resolution, JSONC parsing, resolving API keys from config files, runtime paths, and env templates. When the TUI plugin needs to read user config or resolve secrets, reference this skill.
 
 ### For Logging Patterns
-→ **`plugin-logging`** — SDK structured logging for server plugins, TUI logging with stderr fallback, debug modes, and log filter commands. When implementing debug output from the TUI or diagnosing state issues, reference this skill.
+→ **`plugin-logging`** — SDK structured logging for server plugins, TUI logging with SDK only (no stderr), debug modes, and log filter commands. When implementing debug output from the TUI or diagnosing state issues, reference this skill.
 
 ### For Agent Configuration
 → **`opencode-agents`** — Built-in agents, custom agent config, permissions, subagents, and agent creation. When the TUI plugin interacts with agents (agent selection, agent config panels, agent state display), reference this skill.

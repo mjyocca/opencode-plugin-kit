@@ -142,10 +142,16 @@ export const MyPlugin: Plugin = async ({ client }) => {
 }
 ```
 
-**TUI fallback:** In TUI plugins where `client` may not be available, use `process.stderr.write`:
+**TUI logging:** In TUI plugins, use SDK logging exclusively — no stderr fallback to avoid UI pollution:
 
 ```ts
-process.stderr.write("[my-plugin-tui] message\n")
+await api.client?.app?.log?.({
+  body: {
+    service: "my-plugin-tui",
+    level: "info",
+    message: "TUI message",
+  },
+})
 ```
 
 Filter logs:
@@ -903,7 +909,7 @@ See [Ecosystem Reference](./ecosystem-reference.md) for additional curated resou
 1. Check file extension (`.js` or `.ts` for server, `.tsx` for TUI)
 2. Verify exports — must export a function (not a plain object)
 3. Don't import from `@opencode-ai/plugin/tui` — causes silent failures
-4. Check opencode logs: `DEBUG_MY_PLUGIN=1 opencode`
+4. Check opencode logs: `export OPENCODE_LOG_LEVEL=DEBUG && opencode`
 
 ### TUI Plugin Issues
 
@@ -930,10 +936,12 @@ See [Ecosystem Reference](./ecosystem-reference.md) for additional curated resou
 
 ```bash
 # Server plugin
-DEBUG_MY_PLUGIN=1 opencode
+export OPENCODE_LOG_LEVEL=DEBUG opencode
 
-# TUI plugin
-process.stderr.write("[my-plugin-tui] message\n")
+# TUI plugin (SDK only, no stderr)
+await api.client?.app?.log?.({
+  body: { service: "my-plugin-tui", level: "info", message: "TUI message" },
+})
 
 # Filter all logs
 opencode --log-level DEBUG --print-logs 2>&1 | grep "my-plugin"
@@ -950,4 +958,4 @@ Use `fs.readFileSync` instead of `api.client.file.read()` — the API is sandbox
 | `api.keymap.registerLayer` breaks loading | Guard with `if (!keymap?.registerLayer) return` |
 | Toast notifications not showing | Use `.catch(() => {})` — they're non-blocking |
 | `session_id` undefined in slot props | Make it optional — non-session slots don't provide it |
-| Plugin logs not visible | Use `process.stderr.write`, not `console.log` |
+| Plugin logs not visible | Use `api.client.app.log()`, not `process.stderr.write` or `console.log` |

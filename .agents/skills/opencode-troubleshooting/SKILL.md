@@ -23,9 +23,10 @@ Systematic troubleshooting steps for common opencode issues. For full architectu
 4. **Check config** — verify path in `opencode.json` `"plugin"` array is correct
 5. **Enable debug logging**:
    ```bash
-   DEBUG_MY_PLUGIN=1 opencode
+   export OPENCODE_LOG_LEVEL=DEBUG
+   opencode
    ```
-6. **Check for silent errors** — use `process.stderr.write`, not `console.log`
+6. **Check for silent errors** — use `api.client.app.log()`, not `console.log`
 7. **Don't import from `@opencode-ai/plugin/tui`** — causes silent load failures
 
 ### TUI Plugin
@@ -40,10 +41,12 @@ Systematic troubleshooting steps for common opencode issues. For full architectu
 5. **Don't import types from `@opencode-ai/plugin/tui`** — silent failure
 6. **Check `tui.json`** — verify path is correct in the array
 7. **Use `api: any`** — typed imports break TUI runtime
-8. **Debug with stderr**:
-   ```ts
-   process.stderr.write("[my-plugin-tui] loaded\n")
-   ```
+8. **Debug with SDK logger**:
+    ```ts
+    await api.client?.app?.log?.({
+      body: { service: "my-plugin-tui", level: "info", message: "loaded" },
+    })
+    ```
 
 ---
 
@@ -117,12 +120,12 @@ export const MyPlugin: Plugin = async ({ client }) => {
 
 Levels: `debug`, `info`, `warn`, `error`.
 
-Run with: `DEBUG_MY_PLUGIN=1 opencode` (implement debug filtering in your logger)
+Run with: `export OPENCODE_LOG_LEVEL=DEBUG` (or `pnpm run debug`)
 
-### TUI Plugin (SDK Fallback to stderr)
+### TUI Plugin (SDK Only — No stderr)
 
 ```ts
-// Prefer SDK if available
+// SDK logging only — silently discards if client not available
 await api.client?.app?.log?.({
   body: {
     service: "my-plugin-tui",
@@ -130,9 +133,6 @@ await api.client?.app?.log?.({
     message: "TUI initialized",
   },
 })
-
-// Fallback to stderr
-process.stderr.write("[my-plugin-tui] message\n")
 ```
 
 ### Filter All Logs
@@ -201,7 +201,7 @@ if (existsSync(path)) {
 | `api.keymap.registerLayer` breaks loading | Guard with `if (!keymap?.registerLayer) return` |
 | Toast notifications not showing | Use `.catch(() => {})` — they're non-blocking |
 | `session_id` undefined in slot props | Make it optional — non-session slots don't provide it |
-| Plugin logs not visible | Use `process.stderr.write`, not `console.log` |
+| Plugin logs not visible | Use `api.client.app.log()`, not `console.log` or `stderr` |
 | JSX not rendering in TUI | Check `jsx: "preserve"` in tsconfig, `.tsx` extension |
 | Build produces `.jsx` instead of `.tsx` | Copy file, don't compile — TUI runtime transforms JSX |
 | Plugin hooks not firing | Verify hook name matches exactly (case-sensitive) |

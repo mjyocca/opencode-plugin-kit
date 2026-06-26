@@ -139,9 +139,8 @@ await client.app.log({
 })
 ```
 
-TUI plugin — use SDK fallback or stderr:
+TUI plugin — use SDK logger (no stderr fallback to avoid UI pollution):
 ```ts
-// Prefer SDK if available
 await api.client?.app?.log?.({
   body: {
     service: "your-plugin-tui",
@@ -149,9 +148,6 @@ await api.client?.app?.log?.({
     message: "TUI initialized",
   },
 })
-
-// Fallback to stderr
-process.stderr.write("[your-plugin-tui] TUI initialized\n")
 ```
 
 Filter logs:
@@ -159,7 +155,7 @@ Filter logs:
 opencode --log-level DEBUG --print-logs 2>&1 | grep "your-plugin"
 ```
 
-See [plugin-logging](./.agents/skills/plugin-logging/SKILL.md) for complete patterns.
+See [plugin-logging](./.agents/skills/plugin-logging/SKILL.md) for complete patterns. Note: TUI plugins use the SDK logger with no stderr fallback.
 
 ---
 
